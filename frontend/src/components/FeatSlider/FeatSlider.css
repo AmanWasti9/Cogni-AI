@@ -1,0 +1,124 @@
+:root {
+  --cards: 5;
+  --cardHeight: 70vh;
+  --cardTopPadding: 1.5em;
+  --cardMargin: 1vw;
+}
+
+.container {
+  width: 70vw;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* Center horizontally */
+  align-items: center; /* Center vertically */
+}
+
+#cards {
+  list-style: none;
+  padding-left: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: repeat(var(--cards), var(--cardHeight));
+  gap: var(--cardMargin);
+  padding-bottom: calc(var(--cards) * var(--cardTopPadding));
+  margin-bottom: 100px;
+}
+
+#card1 {
+  --index: 1;
+}
+#card2 {
+  --index: 2;
+}
+#card3 {
+  --index: 3;
+}
+#card4 {
+  --index: 4;
+}
+
+.card {
+  position: sticky;
+  top: 0;
+  padding-top: calc(var(--index) * var(--cardTopPadding));
+}
+
+.card-body {
+  box-sizing: border-box;
+  padding: 30px;
+  margin: 150px 0;
+  border-radius: 50px;
+  height: var(--cardHeight);
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.5s;
+  background-color: #0c0c0c;
+  border: 3px solid transparent;
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  background-image: linear-gradient(#0c0c0c, #0c0c0c),
+    linear-gradient(to bottom, #e848e5, #5218fa);
+}
+
+.card-div2 {
+  width: 50%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.card-div1 {
+  width: 50%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: start;
+  padding: 20px;
+  color: white;
+}
+
+.b-r-rad {
+  border-top-right-radius: 30px;
+  border-bottom-right-radius: 30px;
+}
+
+.b-l-rad {
+  border-top-left-radius: 30px;
+  border-bottom-left-radius: 30px;
+}
+
+h2 {
+  font-size: 2.5em;
+}
+.fs_img {
+  width: 90%;
+}
+
+@media (max-width: 768px) {
+  .card-body {
+    flex-direction: column;
+    justify-content: start;
+    align-items: center;
+    padding: 0px;
+    height: 500px;
+    margin: 135px 0;
+  }
+  .card-div2,
+  .card-div1 {
+    width: 90%;
+    padding: 10px;
+  }
+  .fs_img {
+    width: 50%;
+  }
+
+  .container {
+    width: 90vw;
+  }
+}
