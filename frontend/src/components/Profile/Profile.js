@@ -13,6 +13,8 @@ const Profile = () => {
     imageUrl: "",
   });
   const [image, setImage] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [newUsername, setNewUsername] = useState(userData.username || "");
   const auth = getAuth();
   const user = auth.currentUser;
 
@@ -29,6 +31,7 @@ const Profile = () => {
             email: data.email,
             imageUrl: data.imageUrl || "",
           });
+          setNewUsername(data.username || "");
         } else {
           console.log("No such document!");
         }
@@ -86,6 +89,30 @@ const Profile = () => {
     }
   };
 
+  const handleEditToggle = () => {
+    setIsEditing(!isEditing);
+  };
+
+  const handleUsernameChange = (e) => {
+    setNewUsername(e.target.value);
+  };
+
+  const handleSaveUsername = async () => {
+    try {
+      const userDoc = doc(firestore, "Users", user.uid);
+      await updateDoc(userDoc, {
+        username: newUsername,
+      });
+      setUserData((prevData) => ({
+        ...prevData,
+        username: newUsername,
+      }));
+      setIsEditing(false);
+    } catch (error) {
+      console.error("Error updating username:", error);
+    }
+  };
+
   return (
     <div className="profile-card">
       <div className="profile-header">
@@ -111,10 +138,27 @@ const Profile = () => {
           </label>
         </div>
 
-        <h1 className="profile-name">{userData.username}</h1>
+        {isEditing ? (
+          <input
+            type="text"
+            value={newUsername}
+            onChange={handleUsernameChange}
+            className="edit-username-input"
+          />
+        ) : (
+          <h1 className="profile-name">{userData.username}</h1>
+        )}
         <p className="profile-username">{userData.email}</p>
         <div className="profile-actions">
-          <button className="edit-profile-btn">Edit Profile</button>
+          {isEditing ? (
+            <button className="save-username-btn" onClick={handleSaveUsername}>
+              Save
+            </button>
+          ) : (
+            <button className="edit-profile-btn" onClick={handleEditToggle}>
+              Edit Profile
+            </button>
+          )}
           <button className="view-activity-btn">View Activity</button>
         </div>
       </div>
@@ -160,3 +204,5 @@ const Profile = () => {
 };
 
 export default Profile;
+
+
