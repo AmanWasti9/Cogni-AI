@@ -22,6 +22,9 @@ import Button from "@mui/material/Button";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { MdOutlineLastPage } from "react-icons/md";
 import { MdOutlineFirstPage } from "react-icons/md";
+import { FaShare } from "react-icons/fa";
+import { FaSave } from "react-icons/fa";
+import { MdSaveAlt } from "react-icons/md";
 
 import {
   arrayUnion,
@@ -37,6 +40,7 @@ import {
 import SaveIcon from "@mui/icons-material/Save";
 import { getAuth } from "firebase/auth";
 import { firestore } from "../firebase";
+import jsPDF from "jspdf";
 
 const VisuallyHiddenInput = styled("input")({
   clip: "rect(0 0 0 0)",
@@ -71,6 +75,81 @@ const PDFToImage = () => {
   const [isPublic, setIsPublic] = useState(false); // New state for toggle switch
 
   const handleSnackbarClose = () => setSnackbarOpen(false);
+
+  // Pdf Convertion
+  useEffect(() => {
+    const convertPdfToImages = async () => {
+      if (!file) return;
+
+      try {
+        const fileReader = new FileReader();
+        fileReader.onload = async (event) => {
+          const typedArray = new Uint8Array(event.target.result);
+          const loadingTask = pdfjsLib.getDocument({ data: typedArray });
+          const pdf = await loadingTask.promise;
+
+          setNumPages(pdf.numPages);
+
+          const pages = [];
+          const pages_api = [];
+          for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+            const page = await pdf.getPage(pageNum);
+            const viewport = page.getViewport({ scale: 1.5 });
+
+            const canvas = document.createElement("canvas");
+            const context = canvas.getContext("2d");
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+
+            const renderContext = {
+              canvasContext: context,
+              viewport: viewport,
+            };
+
+            await page.render(renderContext).promise;
+            const image = canvas.toDataURL("image/png");
+
+            const cleanImage = image.replace("data:image/png;base64,", "");
+            pages_api.push({ page: pageNum, cleanImage });
+
+            pages.push({ page: pageNum, image });
+          }
+          setImages(pages);
+
+          try {
+            const response = await axios.post(
+              "http://localhost:8000/extract_pdf/",
+              {
+                pdf: { pages_api },
+              }
+            );
+            if (response.data.extracted_information) {
+              setExtractedInformation(response.data.extracted_information);
+            }
+          } catch (error) {
+            console.error("Error extracting PDF information:", error);
+          }
+        };
+
+        fileReader.readAsArrayBuffer(file);
+      } catch (error) {
+        console.error("Error converting PDF to images:", error);
+      }
+    };
+
+    convertPdfToImages();
+  }, [file]);
+
+  const handleDownloadPDF = () => {
+    const doc = new jsPDF();
+    extractedInformation.forEach((info, index) => {
+      doc.text(20, 20 + index * 10, `Summary ${index + 1}: ${info.summary}`);
+      if (info.formula) {
+        doc.text(20, 30 + index * 10, `Formula: ${info.formula}`);
+      }
+    });
+    doc.save("summary.pdf");
+  };
 
   const handleOpen = () => {
     setOpen(true);
@@ -343,46 +422,33 @@ const PDFToImage = () => {
                 />
               </Button>
             </div>
-            <div
-              className="extracted-data-disp-main"
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                height: "100%",
-              }}
-            >
-              <div style={{ flexGrow: 1 }}>
-                <div className="extracted-d-container">
-                  <ul className="text-font extracted-d-menu active">
-                    <li className="extracted-d-item">
-                      <span
-                        className={`extracted-d-link ${
-                          selectedOption === "summary" ? "active" : ""
-                        }`}
-                        onClick={() => handleOptionClick("summary")}
-                      >
-                        Summary
-                      </span>
+            <div className="extracted-data-disp-main">
+              <div>
+                <div className="sc-nav">
+                  <ul>
+                    <li
+                      className={`extracted-d-link ${
+                        selectedOption === "summary" ? "active" : ""
+                      }`}
+                      onClick={() => handleOptionClick("summary")}
+                    >
+                      Summary
                     </li>
-                    <li className="extracted-d-item">
-                      <span
-                        className={`extracted-d-link ${
-                          selectedOption === "flashcards" ? "active" : ""
-                        }`}
-                        onClick={() => handleOptionClick("flashcards")}
-                      >
-                        Flashcards
-                      </span>
+                    <li
+                      className={`extracted-d-link ${
+                        selectedOption === "flashcards" ? "active" : ""
+                      }`}
+                      onClick={() => handleOptionClick("flashcards")}
+                    >
+                      FlashCards
                     </li>
-                    <li className="extracted-d-item">
-                      <span
-                        className={`extracted-d-link ${
-                          selectedOption === "qna" ? "active" : ""
-                        }`}
-                        onClick={() => handleOptionClick("qna")}
-                      >
-                        Q&A
-                      </span>
+                    <li
+                      className={`extracted-d-link ${
+                        selectedOption === "qna" ? "active" : ""
+                      }`}
+                      onClick={() => handleOptionClick("qna")}
+                    >
+                      QnA
                     </li>
                   </ul>
                 </div>
@@ -397,6 +463,39 @@ const PDFToImage = () => {
                         {extractedInformation[pageNumber - 1]?.formula ||
                           "No formula available"}
                       </p>
+
+                      {/* Button wrapper */}
+                      <div className="all-btns-wrapper">
+                        <div className="all-btns">
+                          <span>
+                            <FaSave
+                              style={{
+                                fontSize: "20px",
+                                cursor: "pointer",
+                              }}
+                              onClick={handleOpen}
+                              disabled={!isAuthenticated} // Disable button if not authenticated
+                            />
+                          </span>
+                          <span>
+                            <MdSaveAlt
+                              onClick={handleDownloadPDF}
+                              style={{
+                                fontSize: "20px",
+                                cursor: "pointer",
+                              }}
+                            />
+                          </span>
+                          <span>
+                            <FaShare
+                              style={{
+                                fontSize: "20px",
+                                cursor: "pointer",
+                              }}
+                            />
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   )}
                   {selectedOption === "flashcards" && (
@@ -406,35 +505,19 @@ const PDFToImage = () => {
                   )}
                   {selectedOption === "qna" && (
                     <div>
-                      <h2>Q&A</h2>
+                      <div className="chatbot-wrapper">
+                        <input
+                          type="text"
+                          className="input"
+                          placeholder="Enter your Email"
+                          // value={username}
+                          // onChange={(e) => setUsername(e.target.value)}
+                        />
+                        <button>Send</button>
+                      </div>
                     </div>
                   )}
                 </div>
-              </div>
-
-              {/* Button wrapper */}
-              <div style={{ marginTop: "auto" }}>
-                <Button
-                  onClick={handleOpen}
-                  variant="contained"
-                  startIcon={<SaveIcon />}
-                  sx={{
-                    mt: 4,
-                    width: "150px",
-                    padding: "10px",
-                    background: "linear-gradient(45deg, #e848e5, #5218fa)",
-                    color: "white",
-                    "&:hover": {
-                      background: "linear-gradient(45deg, #e848e5, #5218fa)",
-                    },
-                    "&:disabled": {
-                      bgcolor: "gray",
-                    },
-                  }}
-                  disabled={!isAuthenticated} // Disable button if not authenticated
-                >
-                  Save
-                </Button>
               </div>
             </div>
             <Dialog
@@ -442,8 +525,8 @@ const PDFToImage = () => {
               onClose={handleClose}
               PaperProps={{
                 style: {
-                  backgroundColor: "black", // Set the background color to transparent
-                  boxShadow: "none", // Optional: remove the default box shadow
+                  backgroundColor: "black",
+                  boxShadow: "none",
                 },
               }}
             >

@@ -11,6 +11,7 @@ import {
   DialogTitle,
 } from "@mui/material";
 import { getAuth } from "firebase/auth";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
 
 const Forum = () => {
   const [posts, setPosts] = useState([]);
@@ -20,18 +21,42 @@ const Forum = () => {
   const [selectedTopic, setSelectedTopic] = useState("");
   const [open, setOpen] = useState(false);
   const [selectedPost, setSelectedPost] = useState(null);
+  const { id } = useParams();
 
   const auth = getAuth();
   const user = auth.currentUser;
 
-  const handleOpen = (post) => {
-    setSelectedPost(post);
-    setOpen(true);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleOpen = async (post) => {
+    try {
+      // Reference to the sub-collection
+      const summariesCollectionRef = collection(
+        firestore,
+        `Summaries/${post.userId}/${post.name}`
+      );
+
+      // Fetch all documents within the sub-collection
+      const summariesSnapshot = await getDocs(summariesCollectionRef);
+      if (!summariesSnapshot.empty) {
+        const summaryData = summariesSnapshot.docs.map((doc) => doc.data());
+        setSelectedPost({ ...post, summaries: summaryData });
+        console.log(summaryData);
+        setOpen(true);
+        navigate(`/forum/post/${post.name}`, { replace: true });
+      } else {
+        console.error("No documents found in the sub-collection!");
+      }
+    } catch (error) {
+      console.error("Error fetching summary documents:", error);
+    }
   };
 
   const handleClose = () => {
     setOpen(false);
     setSelectedPost(null);
+    navigate("/forum", { replace: true });
   };
 
   const topics = ["All", "General", "Announcements", "React"];
@@ -47,7 +72,6 @@ const Forum = () => {
         for (const docSnapshot of summariesSnapshot.docs) {
           const summaries = docSnapshot.data().Summaries || [];
 
-          // Fetch the corresponding user document to get the username
           const userDocRef = doc(firestore, "Users", docSnapshot.id);
           const userDocSnapshot = await getDoc(userDocRef);
           const username = userDocSnapshot.exists()
@@ -57,9 +81,9 @@ const Forum = () => {
           summaries.forEach((summary) => {
             if (summary.public) {
               allSummaries.push({
-                id: docSnapshot.id, // This is the user document ID (uid)
+                userId: docSnapshot.id,
                 name: summary.name,
-                username, // Add username here
+                username,
                 ...summary,
               });
             }
@@ -75,6 +99,16 @@ const Forum = () => {
 
     fetchPublicSummaries();
   }, []);
+
+  useEffect(() => {
+    const postName = location.pathname.split("/forum/post/")[1];
+    if (postName) {
+      const post = posts.find((p) => p.name === postName);
+      if (post) {
+        handleOpen(post);
+      }
+    }
+  }, [location.pathname, posts]);
 
   const handleFilterChange = (e) => {
     setFilter(e.target.value);
@@ -192,30 +226,34 @@ const Forum = () => {
             {selectedPost.name}
           </DialogTitle>
           <DialogContent>
-            <DialogContentText
-              sx={{
-                color: "white",
-              }}
-            >
-              <strong>Username:</strong> {selectedPost.username}
-              <br />
-              <strong>Content:</strong> {selectedPost.content}
-              <br />
-              <strong>Date:</strong> {selectedPost.date}
-              <br />
-              <strong>Topic:</strong> {selectedPost.topic}
-            </DialogContentText>
+            {selectedPost.summaries.map((summary, index) => (
+              <DialogContentText
+                key={index}
+                sx={{
+                  color: "white",
+                  marginBottom: "16px", // Add some spacing between summaries
+                }}
+              >
+                <strong>Page:</strong> {summary.page}
+                <br />
+                {summary.formula && (
+                  <>
+                    <strong>Formula:</strong> {summary.formula}
+                    <br />
+                  </>
+                )}
+                {summary.diagrams && (
+                  <>
+                    <strong>Diagrams:</strong> {summary.diagrams}
+                    <br />
+                  </>
+                )}
+                <strong>Summary:</strong> {summary.summary}
+              </DialogContentText>
+            ))}
           </DialogContent>
           <DialogActions>
-            <Button
-              onClick={handleClose}
-              sx={{
-                backgroundColor: "white",
-                color: "indigo",
-              }}
-            >
-              Close
-            </Button>
+            <Button onClick={handleClose}>Close</Button>
           </DialogActions>
         </Dialog>
       )}

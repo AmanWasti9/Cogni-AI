@@ -23,8 +23,6 @@
 }
 
 @media (max-width: 768px) {
-  .extracted-data-disp-main {
-  }
   .pdf-main-div {
     display: flex;
     flex-direction: column;
@@ -82,16 +80,19 @@
 /* Main Container */
 .extracted-data-disp-main {
   width: 90%;
+  height: 60vh;
   background-color: rgba(255, 255, 255, 0.05);
   margin: 20px 0;
   padding: 20px;
   border-radius: 25px;
+  position: relative;
 }
 
 .extracted-d-container {
   background-color: #000000;
   border-radius: 25px;
   padding: 10px 40px;
+  width: 85%;
   backdrop-filter: blur(10px);
   transition: all 0.3s ease-in-out;
   display: flex;
@@ -106,7 +107,7 @@
 .extracted-d-menu {
   list-style: none;
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   margin: 0;
   padding: 0;
 }
@@ -129,4 +130,50 @@
   color: #ffffff;
   box-shadow: 0 0 10px 5px rgba(82, 24, 250, 0.5);
   cursor: pointer;
+}
+
+/* New */
+
+.sc-nav {
+  background-color: #000000;
+  border-radius: 25px;
+}
+.sc-nav ul {
+  list-style: none;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  gap: 20px;
+  padding: 10px;
+}
+
+/* new btns */
+
+.all-btns-wrapper {
+  position: absolute;
+  bottom: 0;
+  width: 90%;
+  margin: 20px 0;
+  display: flex;
+  justify-content: end;
+}
+
+.all-btns {
+  border-radius: 25px;
+  height: 20px;
+  width: 90%;
+  display: flex;
+  justify-content: end;
+  gap: 20px;
+  padding: 20px;
+}
+
+/* Chatbott css */
+.chatbot-wrapper {
+  position: absolute;
+  bottom: 0;
+  width: 92%;
+  margin: 20px 0;
+  display: flex;
+  justify-content: center;
 }

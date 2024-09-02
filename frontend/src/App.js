@@ -12,6 +12,7 @@ import SignUp from "./components/SignUp/form";
 import DashboardPage from "./pages/DashboardPage";
 // import WorkPage from "./pages/WorkPage";
 import PDFToImage from "./pages/PDFToImage";
+import Profile from "./components/Profile/Profile";
 // import SinglePost from "./pages/SinglePost";
 
 function App() {
@@ -34,9 +35,9 @@ function App() {
               path="/work"
               element={<PDFToImage pdfUrl="../public/02_knn_notes.pdf" />}
             />
-            {/* <Route path="/work" element={<UploadPdfPage />} /> */}
             <Route path="/forum" element={<Forum />} />
-            {/* <Route path="/forum/post/:id" element={<SinglePost />} /> */}
+            <Route path="/forum/post/:postName" element={<Forum />} />
+            <Route path="/profile" element={<Profile />} />
           </Routes>
         </main>
         <br />

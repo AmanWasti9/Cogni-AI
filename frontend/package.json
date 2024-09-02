@@ -25,6 +25,7 @@
     "axios": "^1.7.7",
     "firebase": "^10.13.0",
     "frontend": "file:",
+    "jspdf": "^2.5.1",
     "katex": "^0.16.11",
     "leva": "^0.9.33",
     "meshline": "^3.2.0",
