@@ -1,5 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { getFirestore, doc, getDoc, updateDoc } from "firebase/firestore";
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  updateDoc,
+  getDocs,
+  collection,
+} from "firebase/firestore";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import "./Profile.css";
 import { firestore, storage } from "../../firebase";
@@ -13,6 +20,7 @@ import AccordionSummary from "@mui/material/AccordionSummary";
 import AccordionDetails from "@mui/material/AccordionDetails";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import Button from "@mui/material/Button";
+import { useNavigate } from "react-router-dom";
 
 const Profile = () => {
   const [userData, setUserData] = useState({
@@ -35,6 +43,8 @@ const Profile = () => {
 
   const [isEditingSkills, setIsEditingSkills] = useState(false);
   const [newSkills, setNewSkills] = useState(userData.skills.join(", ") || "");
+
+  const navigate = useNavigate();
 
   const handleEditToggle = (section) => {
     switch (section) {

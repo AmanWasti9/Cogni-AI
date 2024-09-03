@@ -9,6 +9,8 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
+  BarChart,
+  Bar,
   ResponsiveContainer,
 } from "recharts";
 import { Link } from "react-router-dom";
@@ -45,9 +47,42 @@ const data = [
 
 export default function DashboardPage() {
   const [username, setUsername] = useState("");
+  const [summaries, setSummaries] = useState([]);
+  const [chartData, setChartData] = useState([]);
 
   const auth = getAuth();
   const user = auth.currentUser;
+
+  useEffect(() => {
+    const fetchSummaries = async () => {
+      try {
+        // Replace 'user.uid' with the actual UID of the logged-in user if available
+        const userDocRef = doc(firestore, "Summaries", user.uid);
+        const userDocSnapshot = await getDoc(userDocRef);
+
+        if (userDocSnapshot.exists()) {
+          const userSummaries = userDocSnapshot.data().Summaries || [];
+
+          console.log("Fetched summaries:", userSummaries);
+          setSummaries(userSummaries);
+          const transformedData = userSummaries.chartData.map(
+            (item, index) => ({
+              name: item.name || `Page ${index + 1}`,
+              uv: item.likes.length() || 0,
+              // pv: item.pv || 0,
+            })
+          );
+
+          setChartData(transformedData);
+        } else {
+          console.log("No such document!");
+        }
+      } catch (error) {
+        console.error("Error fetching summaries:", error);
+      }
+    };
+    fetchSummaries();
+  }, []);
 
   useEffect(() => {
     const fetchUsername = async () => {
@@ -75,20 +110,22 @@ export default function DashboardPage() {
           <div className="dashboard-item">
             <h3 className="header-font">Syed Amanullah Wasti</h3>
             <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={data}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
+              <BarChart width={500} height={300} data={data} barSize={20}>
+                <XAxis
+                  dataKey="name"
+                  scale="point"
+                  padding={{ left: 10, right: 10 }}
+                />
                 <YAxis />
                 <Tooltip />
                 <Legend />
-                <Line
-                  type="monotone"
+                <CartesianGrid strokeDasharray="3 3" />
+                <Bar
                   dataKey="pv"
-                  stroke="#8884d8"
-                  activeDot={{ r: 8 }}
+                  fill="#8884d8"
+                  background={{ fill: "#eee" }}
                 />
-                <Line type="monotone" dataKey="uv" stroke="#82ca9d" />
-              </LineChart>
+              </BarChart>
             </ResponsiveContainer>
           </div>
 

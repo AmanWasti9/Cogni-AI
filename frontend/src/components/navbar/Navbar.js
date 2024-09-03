@@ -98,6 +98,11 @@ function Navbar() {
           {user ? (
             <>
               <li className="nav-item">
+                <Link to="/dashboard" className="nav-link" onClick={closeMenu}>
+                  Dashboard
+                </Link>
+              </li>
+              <li className="nav-item">
                 <Link to="/profile" className="nav-link" onClick={closeMenu}>
                   Profile
                 </Link>
