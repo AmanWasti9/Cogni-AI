@@ -10,11 +10,6 @@
   }
    */
 /* Main forum layout */
-/* Global styles */
-*, *::before, *::after {
-  box-sizing: border-box;
-}
-
 .forum-layout {
   display: flex;
   gap: 20px;
@@ -30,6 +25,7 @@
   background-color: #000000;
   border-radius: 10px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+  /* Ensure sidebar stays fixed on the left */
 }
 
 .sidebar h2 {
@@ -79,18 +75,10 @@
   background-color: #1a1a1a;
   color: #e0e0e0;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
-  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .filter-input::placeholder {
   color: #888;
-}
-
-.filter-input:focus,
-.sort-select:focus,
-.add-to-collection-btn:focus {
-  outline: 2px solid #e848e5;
-  outline-offset: 2px;
 }
 
 .sort-select {
@@ -133,9 +121,6 @@
   display: flex;
   justify-content: space-between;
   margin-bottom: 15px;
-  background-color: #1c1c1c;
-  padding: 10px;
-  border-radius: 8px;
 }
 
 .post-user {
@@ -163,15 +148,10 @@
   background: linear-gradient(#5218fa, #e848e5);
 }
 
-.add-to-collection-btn:active {
-  background: linear-gradient(#5218fa, #e848e5);
-  transform: scale(0.98);
-}
-
 .post-content {
   font-size: 1.2rem;
   line-height: 1.6;
-  color: #f0f0f0;
+  color: #d3d3d3;
 }
 
 .post-topic {

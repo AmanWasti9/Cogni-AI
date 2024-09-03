@@ -170,10 +170,13 @@
 
 /* Chatbott css */
 .chatbot-wrapper {
+  background-color: rgba(60, 59, 59, 0.05);
   position: absolute;
   bottom: 0;
   width: 92%;
   margin: 20px 0;
+  padding: 10px;
   display: flex;
   justify-content: center;
+  border-radius: 30px;
 }
