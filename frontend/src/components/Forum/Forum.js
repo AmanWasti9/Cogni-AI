@@ -128,7 +128,7 @@ const Forum = () => {
     navigate("/forum", { replace: true });
   };
 
-  const topics = [
+  const name = [
     "All",
     "General",
     "Announcements",
@@ -195,23 +195,23 @@ const Forum = () => {
   };
 
   const handleAddToCollection = (postId) => {
-    const topic = prompt("Enter the topic name for this post:");
-    if (topic) {
+    const name = prompt("Enter the topic name for this post:");
+    if (name) {
       const updatedPosts = posts.map((post) =>
-        post.id === postId ? { ...post, topic } : post
+        post.id === postId ? { ...post, name } : post
       );
       setPosts(updatedPosts);
     }
   };
 
-  const handleTopicSelection = (topic) => {
-    setSelectedTopic(topic === "All" ? "" : topic);
+  const handleTopicSelection = (name) => {
+    setSelectedTopic(name === "All" ? "" : name);
   };
 
   const filteredPosts = posts.filter(
     (post) =>
       post.name.toLowerCase().includes(filter.toLowerCase()) &&
-      (selectedTopic ? post.topic === selectedTopic : true)
+      (selectedTopic ? post.name === selectedTopic : true)
   );
 
   const sortedPosts = filteredPosts.sort((a, b) => {
@@ -313,9 +313,9 @@ const Forum = () => {
       <div className="sidebar">
         <h2>Collections</h2>
         <ul>
-          {topics.map((topic) => (
-            <li key={topic} onClick={() => handleTopicSelection(topic)}>
-              {topic}
+          {name.map((n) => (
+            <li key={n} onClick={() => handleTopicSelection(n)}>
+              {n}
             </li>
           ))}
         </ul>
@@ -361,10 +361,11 @@ const Forum = () => {
                   }}
                 >
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleAddToCollection(post.id);
-                    }}
+                    // onClick={(e) => {
+                    //   e.stopPropagation();
+                    //   handleAddToCollection(post.id);
+                    // }}
+                    onClick={() => handleAddToCollection(post.id)}
                     className="add-to-collection-btn"
                   >
                     Add to Collection
