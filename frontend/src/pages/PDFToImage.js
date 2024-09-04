@@ -269,49 +269,48 @@ const PDFToImage = () => {
     }
   };
 
-  useEffect(() => {
-    const initChat = async () => {
-      if (!user || !user.uid || chatInitialized) {
-        return;
-      }
+  // useEffect(() => {
+  const initChat = async () => {
+    if (!user || !user.uid || chatInitialized) {
+      return;
+    }
 
-      try {
-        const docRef = doc(collection(firestore, "UsersHistory"), user.uid);
-        const docSnap = await getDoc(docRef);
+    try {
+      const docRef = doc(collection(firestore, "UsersHistory"), user.uid);
+      const docSnap = await getDoc(docRef);
 
-        let historyarray = docSnap.exists() ? docSnap.data().history || [] : [];
+      let historyarray = docSnap.exists() ? docSnap.data().history || [] : [];
 
-        const chatHistory = historyarray.map((msg) => ({
-          role: msg.role === "bot" ? "model" : msg.role,
-          parts: [{ text: msg.text || "" }],
-        }));
+      const chatHistory = historyarray.map((msg) => ({
+        role: msg.role === "bot" ? "model" : msg.role,
+        parts: [{ text: msg.text || "" }],
+      }));
 
-        console.log("Chat history being sent:", chatHistory);
+      console.log("Chat history being sent:", chatHistory);
 
-        const newChat = await model.startChat({
-          history: chatHistory,
-          generationConfig,
-          safetySettings,
-        });
+      const newChat = await model.startChat({
+        history: chatHistory,
+        generationConfig,
+        safetySettings,
+      });
 
-        setChat(newChat);
-        setChatInitialized(true); // Set chat as initialized
-        setHistoryMessages(
-          chatHistory.map((msg) => ({
-            // Set chat history state
-            text: msg.parts[0].text,
-            role: msg.role,
-            timestamp: new Date(), // Placeholder, you might need to adjust based on your data
-          }))
-        );
-      } catch (error) {
-        console.error("Failed to initialize chat:", error);
-        setError("Failed to initialize chat. Please try again.");
-      }
-    };
+      setChat(newChat);
+      setChatInitialized(true); // Set chat as initialized
+      setHistoryMessages(
+        chatHistory.map((msg) => ({
+          // Set chat history state
+          text: msg.parts[0].text,
+          role: msg.role,
+          timestamp: new Date(), // Placeholder, you might need to adjust based on your data
+        }))
+      );
+    } catch (error) {
+      console.error("Failed to initialize chat:", error);
+      setError("Failed to initialize chat. Please try again.");
+    }
+  };
 
-    initChat();
-  }, [user, chatInitialized]); // Use chatInitialized as a dependency
+  // }, [user, chatInitialized]); // Use chatInitialized as a dependency
 
   // Pdf Convertion
   useEffect(() => {
@@ -421,6 +420,7 @@ const PDFToImage = () => {
       console.log(
         "Chat history successfully updated with extracted information!"
       );
+      initChat();
     } catch (e) {
       console.error(
         "Error updating chat history with extracted information: ",
@@ -694,7 +694,10 @@ const PDFToImage = () => {
                       className={`extracted-d-link text-font ${
                         selectedOption === "qna" ? "active" : ""
                       }`}
-                      onClick={() => handleOptionClick("qna")}
+                      onClick={() => {
+                        handleOptionClick("qna");
+                        handleOptionClick("qna");
+                      }}
                     >
                       QnA
                     </li>
@@ -704,6 +707,7 @@ const PDFToImage = () => {
                   {selectedOption === "summary" && (
                     <div>
                       <div
+                        className="custom-scrollbar"
                         style={{
                           height: "40vh",
                           overflowX: "hidden",
