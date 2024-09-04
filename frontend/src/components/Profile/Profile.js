@@ -19,8 +19,8 @@ import AccordionActions from "@mui/material/AccordionActions";
 import AccordionSummary from "@mui/material/AccordionSummary";
 import AccordionDetails from "@mui/material/AccordionDetails";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import Button from "@mui/material/Button";
-import { useNavigate } from "react-router-dom";
+import { IoCloseCircle } from "react-icons/io5";
+import ReactMarkdown from "react-markdown";
 
 const Profile = () => {
   const [userData, setUserData] = useState({
@@ -44,7 +44,7 @@ const Profile = () => {
   const [isEditingSkills, setIsEditingSkills] = useState(false);
   const [newSkills, setNewSkills] = useState(userData.skills.join(", ") || "");
 
-  const navigate = useNavigate();
+  const [selectedPost, setSelectedPost] = useState(null);
 
   const handleEditToggle = (section) => {
     switch (section) {
@@ -124,13 +124,22 @@ const Profile = () => {
           break;
 
         case "skills":
-          const skillsArray = newSkills.split(",").map((skill) => skill.trim());
+          const newSkillsArray = newSkills
+            .split(",")
+            .map((skill) => skill.trim())
+            .filter((skill) => skill.length > 0);
+
+          const updatedSkillsArray = [
+            ...new Set([...userData.skills, ...newSkillsArray]), // Combine existing skills with new ones and ensure uniqueness
+          ];
+
           await updateDoc(userDoc, {
-            skills: skillsArray,
+            skills: updatedSkillsArray,
           });
+
           setUserData((prevData) => ({
             ...prevData,
-            skills: skillsArray,
+            skills: updatedSkillsArray,
           }));
           setIsEditingSkills(false);
           break;
@@ -212,6 +221,60 @@ const Profile = () => {
       } catch (error) {
         console.error("Error uploading and updating image:", error);
       }
+    }
+  };
+
+  const handleOpen = async (summary) => {
+    try {
+      // Assuming that `summary.userId` and `summary.name` are correct
+      const summariesCollectionRef = collection(
+        firestore,
+        `Summaries/${user.uid}/${summary.name}`
+      );
+
+      const summariesSnapshot = await getDocs(summariesCollectionRef);
+
+      if (!summariesSnapshot.empty) {
+        const summaryData = summariesSnapshot.docs.map((doc) => doc.data());
+        setSelectedPost({ ...summary, summaries: summaryData });
+      } else {
+        console.log("No documents found in the sub-collection!");
+        setSelectedPost({ ...summary, summaries: [] });
+      }
+    } catch (error) {
+      console.error("Error fetching summary documents:", error);
+    }
+  };
+
+  // Function to handle skill deletion
+  const handleDeleteSkill = async (index) => {
+    try {
+      const userDoc = doc(firestore, "Users", user.uid);
+
+      // Get current skills from state
+      const updatedSkills = [...userData.skills];
+
+      // Remove the skill at the specified index
+      updatedSkills.splice(index, 1);
+
+      // Update Firestore with the new list of skills
+      await updateDoc(userDoc, {
+        skills: updatedSkills,
+      });
+
+      // Update local state with the new list of skills
+      setUserData((prevData) => ({
+        ...prevData,
+        skills: updatedSkills,
+      }));
+    } catch (error) {
+      console.error("Error deleting skill:", error);
+    }
+  };
+
+  const handleKeyDown = (event) => {
+    if (event.key === "Enter") {
+      handleSave("skills");
     }
   };
 
@@ -338,8 +401,8 @@ const Profile = () => {
           {isEditingSkills ? (
             <input
               type="text"
-              value={newSkills}
               onChange={handleSkillsChange}
+              onKeyDown={handleKeyDown}
               className="edit-skills-input"
               style={{
                 width: "100%",
@@ -362,6 +425,19 @@ const Profile = () => {
               {userData.skills.map((skill, index) => (
                 <li key={index} className="skill">
                   {skill}
+                  <span
+                    onClick={() => handleDeleteSkill(index)}
+                    style={{
+                      position: "absolute",
+                      top: "-8px",
+                      right: "-5px",
+                      cursor: "pointer",
+                      color: "#5218fa",
+                      fontSize: "20px",
+                    }}
+                  >
+                    <IoCloseCircle />
+                  </span>
                 </li>
               ))}
             </ul>
@@ -371,7 +447,7 @@ const Profile = () => {
               className="edit-profile-btn"
               onClick={() => handleSave("skills")}
             >
-              Save
+              Add
             </button>
           ) : (
             <span onClick={() => handleEditToggle("skills")}>
@@ -386,23 +462,9 @@ const Profile = () => {
             </span>
           )}
         </div>
+
         <h2 className="profile-section-title">My Posts</h2>
         <div>
-          {/* {summaries.length > 0 ? (
-            summaries.map((summary, index) => (
-              <div key={index} className="post">
-                <h3>{summary.name}</h3>
-                <p>
-                  {summary.likes ? summary.likes.length : 0}{" "}
-                  {summary.likes && summary.likes.length === 1
-                    ? "like"
-                    : "likes"}
-                </p>
-              </div>
-            ))
-          ) : (
-            <p>No posts available.</p>
-          )} */}
           {summaries.length > 0 ? (
             summaries.map((summary, index) => (
               <Accordion
@@ -422,6 +484,7 @@ const Profile = () => {
                   }
                   aria-controls="panel1-content"
                   id="panel1-header"
+                  onClick={() => handleOpen(summary)}
                 >
                   {summary.name}
                   {summary.likes ? summary.likes.length : 0}{" "}
@@ -429,10 +492,26 @@ const Profile = () => {
                     ? "like"
                     : "likes"}
                 </AccordionSummary>
+
                 <AccordionDetails>
-                  Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-                  Suspendisse malesuada lacus ex, sit amet blandit leo lobortis
-                  eget.
+                  {selectedPost && selectedPost.name === summary.name ? (
+                    selectedPost.summaries.length > 0 ? (
+                      selectedPost.summaries.map((item, index) => (
+                        <div
+                          key={index}
+                          style={{
+                            paddingLeft: "10px",
+                          }}
+                        >
+                          <ReactMarkdown>{item.summary}</ReactMarkdown>
+                        </div>
+                      ))
+                    ) : (
+                      <p>No summaries available</p>
+                    )
+                  ) : (
+                    <p>Loading...</p>
+                  )}
                 </AccordionDetails>
               </Accordion>
             ))

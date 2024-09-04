@@ -95,7 +95,7 @@ function Navbar() {
               </li>
             </>
           )}
-          {user ? (
+          {user && (
             <>
               <li className="nav-item">
                 <Link to="/dashboard" className="nav-link" onClick={closeMenu}>
@@ -126,7 +126,8 @@ function Navbar() {
                 </Link>
               </li>
             </>
-          ) : (
+          )}
+          {!user && (
             <li className="nav-item">
               <Link to="/signin" className="nav-link" onClick={closeMenu}>
                 Get Started

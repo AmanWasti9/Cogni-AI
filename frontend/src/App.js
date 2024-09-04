@@ -38,6 +38,7 @@ function App() {
             <Route path="/forum" element={<Forum />} />
             <Route path="/forum/post/:postName" element={<Forum />} />
             <Route path="/profile" element={<Profile />} />
+            {/* <Route path="/profile/post/:postName" element={<Profile />} /> */}
           </Routes>
         </main>
         <br />

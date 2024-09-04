@@ -128,7 +128,14 @@ const Forum = () => {
     navigate("/forum", { replace: true });
   };
 
-  const topics = ["All", "General", "Announcements", "React"];
+  const topics = [
+    "All",
+    "General",
+    "Announcements",
+    "React",
+    "First Sum",
+    "Aman Card",
+  ];
 
   useEffect(() => {
     const fetchPublicSummaries = async () => {

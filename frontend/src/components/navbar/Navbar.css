@@ -76,7 +76,7 @@
 @media screen and (max-width: 768px) {
   .nav-menu {
     position: absolute;
-    top: 150px;
+    top: 100px;
     left: 0;
     width: 100%;
     height: calc(100vh - 60px);

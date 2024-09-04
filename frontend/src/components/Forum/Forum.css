@@ -58,6 +58,7 @@
   background: #000000;
   border-radius: 15px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+  width: 80%;
 }
 
 /* Forum controls */
@@ -137,7 +138,7 @@
 .add-to-collection-btn {
   background: linear-gradient(#e848e5, #5218fa);
   border: none;
-  padding: 5px 10px;
+  padding: 15px 10px;
   border-radius: 8px;
   color: #fff;
   cursor: pointer;
@@ -168,12 +169,12 @@
   }
 
   .sidebar {
-    width: 100%;
+    width: 90%;
     margin-bottom: 20px; /* Space between sidebar and content */
   }
 
   .forum-container {
-    width: 100%;
+    width: 89%;
   }
 }
 
@@ -184,7 +185,8 @@
 
   .filter-input,
   .sort-select {
-    width: 100%;
+    width: 45%;
+    margin-left: 10px;
   }
 
   .sidebar ul li {
@@ -200,7 +202,7 @@
   }
 
   .add-to-collection-btn {
-    padding: 5px 8px;
+    padding: 15px 10px;
   }
 }
 
@@ -212,6 +214,7 @@
   .filter-input,
   .sort-select {
     padding: 8px;
+    margin-left: 10px;
   }
 
   .post {
@@ -223,6 +226,6 @@
   }
 
   .add-to-collection-btn {
-    padding: 4px 8px;
+    padding: 15px 10px;
   }
 }

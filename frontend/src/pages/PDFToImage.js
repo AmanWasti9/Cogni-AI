@@ -66,7 +66,7 @@ const VisuallyHiddenInput = styled("input")({
 });
 
 const CustomButton = styled(Button)(({ theme }) => ({
-  backgroundColor: "white",
+  background: "linear-gradient(45deg, #e848e5, #5218fa)",
   borderRadius: "50%",
   padding: "0.5rem",
   minWidth: "unset",
@@ -105,7 +105,7 @@ const PDFToImage = () => {
   const [response, setResponse] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const messageEndRef = useRef(null);
+  // const messageEndRef = useRef(null);
 
   const handleSnackbarClose = () => setSnackbarOpen(false);
 
@@ -120,8 +120,11 @@ const PDFToImage = () => {
   const API_KEY = "AIzaSyDYmligr0eUjKVNQqXJRKfFacWbWSiaPN0";
   const genAI = new GoogleGenerativeAI(API_KEY);
 
+  const summaries = extractedInformation.map((info) => info.summary).join("\n");
+  console.log(summaries);
   const model = genAI.getGenerativeModel({
     model: "gemini-1.5-flash",
+    systemInstruction: `You are a research related bot that will answer any questions regarding this document: \n${summaries}\n and if any question is asked that is off topic and irrelevant to the topic you wont answer it.`,
   });
 
   const generationConfig = {
@@ -220,12 +223,6 @@ const PDFToImage = () => {
         const key = `${newMsg.timestamp.getTime()}-${newMsg.text}`;
         return !existingMessagesMap.has(key);
       });
-
-      if (uniqueMessages.length > 0) {
-        historyArray = [...historyArray, ...uniqueMessages];
-        await setDoc(docRef, { history: historyArray });
-        console.log("Chat history successfully updated!");
-      }
     } catch (e) {
       console.error("Error updating chat history: ", e);
     }
@@ -238,7 +235,6 @@ const PDFToImage = () => {
         role: "user",
         timestamp: new Date(),
       };
-
       const newMessages = [...messages, userMessage];
       setMessages(newMessages);
       setUserInput("");
@@ -246,23 +242,13 @@ const PDFToImage = () => {
       const retrievedData = retrieveInformation(userInput);
       console.log("Retrieved Data", retrievedData);
 
-      const context = retrievedData
-        .map((item) => {
-          const { name, price, rpm, noise_level } = item;
-          return `name: ${name}, price: ${price}, rpm= ${rpm}, noise_level= ${noise_level}`;
-        })
-        .join("\n");
-
-      console.log("Context:", context);
-
       if (chat) {
         const contextMessages = newMessages.map((msg) => ({
           role: msg.role === "user" ? "user" : "model",
           parts: [{ text: msg.text || "" }],
         }));
-
         const result = await chat.sendMessage(userInput, {
-          context,
+          // context,
           history: contextMessages,
         });
         const botMessage = {
@@ -375,7 +361,11 @@ const PDFToImage = () => {
               }
             );
             if (response.data.extracted_information) {
-              setExtractedInformation(response.data.extracted_information);
+              const extractedInfo = response.data.extracted_information;
+              setExtractedInformation(extractedInfo);
+
+              // Update chat history with the extracted information
+              await updateExtractedInformation(extractedInfo);
             }
           } catch (error) {
             console.error("Error extracting PDF information:", error);
@@ -391,98 +381,98 @@ const PDFToImage = () => {
     convertPdfToImages();
   }, [file]);
 
-  const handleDownloadPDF = () => {
-    const doc = new jsPDF();
-    extractedInformation.forEach((info, index) => {
-      doc.text(20, 20 + index * 10, `Summary ${index + 1}: ${info.summary}`);
-      if (info.formula) {
-        doc.text(20, 30 + index * 10, `Formula: ${info.formula}`);
+  // New function to update chat history with extracted information
+  const updateExtractedInformation = async (extractedInformation) => {
+    if (!user || !user.uid) {
+      console.error("User is not authenticated or UID is missing");
+      return;
+    }
+
+    try {
+      const docRef = doc(collection(firestore, "UsersHistory"), user.uid);
+
+      // Fetch the existing chat history
+      const docSnap = await getDoc(docRef);
+      let historyArray = [];
+
+      if (docSnap.exists()) {
+        historyArray = docSnap.data().history || [];
       }
-    });
-    doc.save("summary.pdf");
+
+      // Prepare the extracted information as a single message
+      const summaries = extractedInformation
+        .map((info) => info.summary)
+        .join("\n\n");
+
+      console.log("Summaries Aman ", summaries);
+
+      const extract = {
+        text: `This is the document:\n\n${summaries}`,
+        role: "user", // You can change this if needed
+        timestamp: new Date(), // Current timestamp
+      };
+
+      // Add the extract object to the historyArray
+      historyArray.push(extract); // Add the extract object directly
+
+      console.log(historyArray);
+
+      await setDoc(docRef, { history: historyArray });
+      console.log(
+        "Chat history successfully updated with extracted information!"
+      );
+    } catch (e) {
+      console.error(
+        "Error updating chat history with extracted information: ",
+        e
+      );
+    }
   };
 
+  const handleDownloadPDF = () => {
+    const doc = new jsPDF();
+    let yPosition = 20;
+    const lineHeight = 10;
+    const pageHeight = doc.internal.pageSize.height;
+
+    extractedInformation.forEach((info, index) => {
+      const summaryText = doc.splitTextToSize(
+        `Summary ${index + 1}: ${info.summary}`,
+        180
+      );
+      const formulaText = info.formula
+        ? doc.splitTextToSize(`Formula: ${info.formula}`, 180)
+        : [];
+
+      summaryText.forEach((line) => {
+        if (yPosition + lineHeight > pageHeight - 20) {
+          doc.addPage();
+          yPosition = 20;
+        }
+        doc.text(20, yPosition, line);
+        yPosition += lineHeight;
+      });
+
+      formulaText.forEach((line) => {
+        if (yPosition + lineHeight > pageHeight - 20) {
+          doc.addPage();
+          yPosition = 20;
+        }
+        doc.text(20, yPosition, line);
+        yPosition += lineHeight;
+      });
+
+      yPosition += 10;
+    });
+
+    doc.save("summary.pdf");
+  };
   const handleOpen = () => {
     setOpen(true);
   };
   const handleClose = () => {
     setOpen(false);
   };
-
-  useEffect(() => {
-    const convertPdfToImages = async () => {
-      if (!file) return;
-
-      try {
-        const fileReader = new FileReader();
-        fileReader.onload = async (event) => {
-          const typedArray = new Uint8Array(event.target.result);
-          const loadingTask = pdfjsLib.getDocument({ data: typedArray });
-          const pdf = await loadingTask.promise;
-
-          setNumPages(pdf.numPages);
-
-          const pages = [];
-          const pages_api = [];
-          for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-            const page = await pdf.getPage(pageNum);
-            const viewport = page.getViewport({ scale: 1.5 });
-
-            const canvas = document.createElement("canvas");
-            const context = canvas.getContext("2d");
-            canvas.height = viewport.height;
-            canvas.width = viewport.width;
-
-            const renderContext = {
-              canvasContext: context,
-              viewport: viewport,
-            };
-
-            await page.render(renderContext).promise;
-            const image = canvas.toDataURL("image/png");
-
-            const cleanImage = image.replace("data:image/png;base64,", "");
-            pages_api.push({ page: pageNum, cleanImage });
-
-            pages.push({ page: pageNum, image });
-          }
-          setImages(pages);
-
-          try {
-            const response = await axios.post(
-              "http://localhost:8000/extract_pdf/",
-              {
-                pdf: { pages_api },
-              }
-            );
-            console.log("Server response:", response.data);
-            if (response.data.extracted_information) {
-              setExtractedInformation(response.data.extracted_information);
-            }
-          } catch (error) {
-            if (axios.isAxiosError(error)) {
-              if (error.response) {
-                console.error("Server response error:", error.response.data);
-                console.error("Status code:", error.response.status);
-              } else if (error.request) {
-                console.error("Request error:", error.request);
-              } else {
-                console.error("Error message:", error.message);
-              }
-            } else {
-              console.error("Unexpected error:", error);
-            }
-          }
-        };
-
-        fileReader.readAsArrayBuffer(file);
-      } catch (error) {
-        console.error("Error converting PDF to images:", error);
-      }
-    };
-
-    convertPdfToImages();
-  }, [file]);
 
   const handleFileChange = (event) => {
     const uploadedFile = event.target.files[0];
@@ -531,7 +521,12 @@ const PDFToImage = () => {
     try {
       const docSnap = await getDoc(userDocRef);
 
-      const summaryData = { name, public: isPublic }; // Add public field to summary data
+      const timestamp = new Date(); // Get the current date and time
+      const summaryData = {
+        name,
+        public: isPublic,
+        date: timestamp, // Add the date field
+      };
 
       if (docSnap.exists()) {
         const existingSummaries = docSnap.data().Summaries || [];
@@ -556,7 +551,7 @@ const PDFToImage = () => {
 
       await batch.commit();
       handleClose();
-      setSnackbarMessage("Summary have been saved successfully.");
+      setSnackbarMessage("Summary has been saved successfully.");
       setName("");
       setIsPublic(false);
       setSnackbarOpen(true);
@@ -573,41 +568,6 @@ const PDFToImage = () => {
       setIsAuthenticated(false);
     }
   }, [user]);
-
-  useEffect(() => {
-    // Scroll to the bottom of the chat messages when new message is added
-    messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    // Add user message immediately
-    setMessages((prevMessages) => [
-      ...prevMessages,
-      { text: userInput, sender: "user" },
-    ]);
-    setUserInput(""); // Clear the input field after adding the user message
-
-    // Show loading indicator
-    setLoading(true);
-
-    try {
-      const res = await axios.post("http://localhost:8000/ask-question/", {
-        question: userInput,
-      });
-
-      // Add bot response after loading
-      setMessages((prevMessages) => [
-        ...prevMessages,
-        { text: res.data.answer, sender: "bot" },
-      ]);
-    } catch (error) {
-      console.error("Error:", error);
-      alert("An error occurred. Please try again.");
-    } finally {
-      setLoading(false); // Stop the loading indicator
-    }
-  };
 
   return (
     <div style={{ marginTop: "150px" }}>
@@ -654,6 +614,7 @@ const PDFToImage = () => {
                         justifyContent: "center",
                         alignItems: "center",
                       }}
+                      className="text-font"
                     >
                       Page {pageNumber} of {numPages}
                     </span>
@@ -699,6 +660,7 @@ const PDFToImage = () => {
                   fontSize: "20px",
                   background: "linear-gradient(45deg, #e848e5, #5218fa)",
                 }}
+                className="text-font"
               >
                 Upload files
                 <VisuallyHiddenInput
@@ -713,7 +675,7 @@ const PDFToImage = () => {
                 <div className="sc-nav">
                   <ul>
                     <li
-                      className={`extracted-d-link ${
+                      className={`extracted-d-link text-font ${
                         selectedOption === "summary" ? "active" : ""
                       }`}
                       onClick={() => handleOptionClick("summary")}
@@ -721,15 +683,15 @@ const PDFToImage = () => {
                       Summary
                     </li>
                     <li
-                      className={`extracted-d-link ${
+                      className={`extracted-d-link text-font ${
                         selectedOption === "flashcards" ? "active" : ""
                       }`}
                       onClick={() => handleOptionClick("flashcards")}
                     >
-                      FlashCards
+                      Flashcards
                     </li>
                     <li
-                      className={`extracted-d-link ${
+                      className={`extracted-d-link text-font ${
                         selectedOption === "qna" ? "active" : ""
                       }`}
                       onClick={() => handleOptionClick("qna")}
@@ -741,27 +703,58 @@ const PDFToImage = () => {
                 <div>
                   {selectedOption === "summary" && (
                     <div>
-                      <p style={{ textAlign: "justify" }}>
-                        {extractedInformation[pageNumber - 1]?.summary ||
-                          "No summary available"}
-                      </p>
-                      <p>
-                        {extractedInformation[pageNumber - 1]?.formula ||
-                          "No formula available"}
-                      </p>
+                      <div
+                        style={{
+                          height: "40vh",
+                          overflowX: "hidden",
+                          overflowY: "auto",
+                          marginTop: "10px",
+                        }}
+                      >
+                        <div
+                          style={{
+                            maxHeight: "40vh",
+                            // overflowY: "auto",
+                            paddingRight: "15px",
+                          }}
+                        >
+                          <p
+                            className="text-font"
+                            style={{ textAlign: "justify" }}
+                          >
+                            {extractedInformation[pageNumber - 1]?.summary ||
+                              "No summary available"}
+                            <br />
+                            {extractedInformation[pageNumber - 1]?.formula ||
+                              "No formula available"}
+                          </p>
+                        </div>
+                      </div>
 
                       {/* Button wrapper */}
                       <div className="all-btns-wrapper">
-                        <div className="all-btns">
-                          <span>
-                            <FaSave
-                              style={{
-                                fontSize: "20px",
-                                cursor: "pointer",
-                              }}
-                              onClick={handleOpen}
-                              disabled={!isAuthenticated} // Disable button if not authenticated
-                            />
+                        <div
+                          className="all-btns"
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                          }}
+                        >
+                          <span
+                            style={{
+                              fontSize: "20px",
+                              cursor: "pointer",
+                              display: "flex",
+                              alignItems: "center",
+                              border: "1px solid #5218fa",
+                              padding: "5px 10px",
+                              borderRadius: "5px",
+                            }}
+                            onClick={handleOpen}
+                            disabled={!isAuthenticated}
+                            className="text-font"
+                          >
+                            Save
                           </span>
                           <span>
                             <MdSaveAlt
@@ -769,14 +762,8 @@ const PDFToImage = () => {
                               style={{
                                 fontSize: "20px",
                                 cursor: "pointer",
-                              }}
-                            />
-                          </span>
-                          <span>
-                            <FaShare
-                              style={{
-                                fontSize: "20px",
-                                cursor: "pointer",
+                                display: "flex",
+                                alignItems: "center",
                               }}
                             />
                           </span>
@@ -786,12 +773,13 @@ const PDFToImage = () => {
                   )}
                   {selectedOption === "flashcards" && (
                     <div>
-                      <h2>Coming Soon . . .</h2>
+                      <h2 className="text-font">Coming Soon . . .</h2>
                     </div>
                   )}
                   {selectedOption === "qna" && (
                     <div>
                       <div
+                        className="custom-scrollbar"
                         style={{
                           padding: 2,
                           display: "flex",
@@ -815,13 +803,12 @@ const PDFToImage = () => {
                             }}
                           >
                             <p
+                              className="text-font"
                               style={{
                                 backgroundColor:
-                                  msg.role === "user"
-                                    ? "rgba(36, 30, 30, 0.05);"
-                                    : "rgba(36, 30, 30, 0.05);",
+                                  msg.role === "user" ? "#5218fa" : "#e848e5",
                                 wordWrap: "break-word",
-                                padding: 8,
+                                padding: "8px 20px",
                                 borderRadius: 8,
                                 maxWidth: "75%",
                                 textAlign:
@@ -832,9 +819,11 @@ const PDFToImage = () => {
                             </p>
                           </div>
                         ))}
+                        {/* <div ref={messageEndRef} /> Scroll target */}
                       </div>
                       <div className="chatbot-wrapper">
                         <TextField
+                          className="text-font"
                           type="text"
                           fullWidth
                           label="Prompt Here..."
@@ -849,7 +838,7 @@ const PDFToImage = () => {
                             endAdornment: (
                               <InputAdornment position="end">
                                 <CustomButton onClick={handleSendMessage}>
-                                  <SendIcon style={{ color: "purple" }} />
+                                  <SendIcon style={{ color: "white" }} />
                                 </CustomButton>
                               </InputAdornment>
                             ),
@@ -862,13 +851,13 @@ const PDFToImage = () => {
                           sx={{
                             "& .MuiOutlinedInput-root": {
                               "& fieldset": {
-                                borderColor: "indigo", // Gradient from dark violet to purple
+                                borderColor: "#5218fa", // Gradient from dark violet to purple
                               },
                               "&:hover fieldset": {
-                                borderColor: "indigo", // Gradient from dark violet to purple
+                                borderColor: "#5218fa", // Gradient from dark violet to purple
                               },
                               "&.Mui-focused fieldset": {
-                                borderColor: "indigo",
+                                borderColor: "#5218fa",
                               },
                               color: "white",
                             },
@@ -900,19 +889,21 @@ const PDFToImage = () => {
               }}
             >
               <DialogTitle
+                className="text-font"
                 sx={{
                   color: "white",
                 }}
               >
-                Save your Work
+                Save your Summary
               </DialogTitle>
               <DialogContent>
                 <DialogContentText
                   sx={{
                     color: "white",
                   }}
+                  className="text-font"
                 >
-                  Please enter a collection name for your work.
+                  Please enter a collection name for your Summary.
                 </DialogContentText>
                 <TextField
                   autoFocus
@@ -963,6 +954,15 @@ const PDFToImage = () => {
                     style: { color: "white" }, // Label color
                   }}
                 />
+                <label
+                  style={{
+                    color: "white",
+                    marginRight: "10px",
+                  }}
+                  className="text-font"
+                >
+                  {isPublic ? "Public" : "Private"}
+                </label>
                 <FormControlLabel
                   control={
                     <Switch
@@ -995,6 +995,7 @@ const PDFToImage = () => {
                     backgroundColor: "white",
                     color: "indigo",
                   }}
+                  className="text-font"
                 >
                   Cancel
                 </Button>
@@ -1004,6 +1005,7 @@ const PDFToImage = () => {
                     background: "linear-gradient(to bottom, #e848e5, #5218fa)",
                     color: "white",
                   }}
+                  className="text-font"
                 >
                   Save
                 </Button>
@@ -1045,7 +1047,9 @@ const PDFToImage = () => {
                       d="M432 320h-80V160c0-8.84-7.16-16-16-16h-32c-8.84 0-16 7.16-16 16v160h-80c-14.2 0-21.4 17.2-11.3 27.3l152 152c6.6 6.6 17.4 6.6 24 0l152-152c10.1-10.1 2.9-27.3-11.3-27.3zM480 32H160C71.6 32 0 103.6 0 192v192c0 88.4 71.6 160 160 160h96c8.84 0 16-7.16 16-16v-32c0-8.84-7.16-16-16-16h-96c-52.93 0-96-43.1-96-96V192c0-52.93 43.07-96 96-96h320c52.9 0 96 43.07 96 96v192c0 52.93-43.1 96-96 96h-96c-8.84 0-16 7.16-16 16v32c0 8.84 7.16 16 16 16h96c88.4 0 160-71.6 160-160V192c0-88.4-71.6-160-160-160z"
                     />
                   </svg>
-                  <h3>Drag and Drop or Browse to Upload a file</h3>
+                  <h3 className="text-font">
+                    Drag and Drop or Browse to Upload a file
+                  </h3>
                 </div>
               </label>
               <input
@@ -1065,152 +1069,3 @@ const PDFToImage = () => {
 };
 
 export default PDFToImage;
-
-// <div style={{ marginTop: "10px", overflowY: "auto" }}>
-// <div
-//   style={{
-//     overflowY: "auto",
-//     height: "50vh",
-//     color: "white",
-//     padding: "10px",
-//     borderRadius: "15px",
-//   }}
-// >
-//   {messages.map((msg, index) => (
-//     <div
-//       key={index}
-//       style={{
-//         display: "flex",
-//         justifyContent:
-//           msg.sender === "user"
-//             ? "flex-end"
-//             : "flex-start",
-//         flexDirection: "column",
-//         alignItems:
-//           msg.sender === "user"
-//             ? "flex-end"
-//             : "flex-start",
-//         marginBottom: "10px",
-//       }}
-//     >
-//       <div
-//         style={{
-//           wordWrap: "break-word",
-//           backgroundColor:
-//             msg.sender === "user" ? "#4a90e2" : "#e2e2e2",
-//           color:
-//             msg.sender === "user" ? "white" : "black",
-//           padding: "10px",
-//           borderRadius: "15px",
-//           maxWidth: "75%",
-//           textAlign:
-//             msg.sender === "user" ? "right" : "left",
-//         }}
-//       >
-//         {msg.text}
-//       </div>
-//       <Typography
-//         variant="caption"
-//         style={{
-//           color: "gray",
-//           marginTop: "5px",
-//           textAlign:
-//             msg.sender === "user" ? "right" : "left",
-//         }}
-//       >
-//         {msg.sender === "user" ? "You" : "Bot"}
-//       </Typography>
-//     </div>
-//   ))}
-
-//   {loading && (
-//     <div
-//       style={{
-//         display: "flex",
-//         justifyContent: "flex-start",
-//         flexDirection: "column",
-//         alignItems: "flex-start",
-//         marginBottom: "10px",
-//       }}
-//     >
-//       <div
-//         style={{
-//           wordWrap: "break-word",
-//           backgroundColor: "#f5f5f5",
-//           padding: "10px",
-//           borderRadius: "15px",
-//           maxWidth: "75%",
-//           textAlign: "left",
-//         }}
-//       >
-//         <span>
-//           <div className="loader"></div>
-//         </span>
-//       </div>
-//       <Typography
-//         variant="caption"
-//         style={{
-//           color: "gray",
-//           marginTop: "5px",
-//           textAlign: "left",
-//         }}
-//       >
-//         Bot
-//       </Typography>
-//     </div>
-//   )}
-//   <div ref={messageEndRef} />
-// </div>
-
-// <div className="chatbot-wrapper">
-//   <TextField
-//     type="text"
-//     fullWidth
-//     label="Prompt Here..."
-//     value={userInput}
-//     onChange={(e) => setUserInput(e.target.value)}
-//     onKeyDown={(e) => {
-//       if (e.key === "Enter") {
-//         handleSendMessage(); // Trigger handleSendClick when Enter is pressed
-//       }
-//     }}
-//     InputProps={{
-//       endAdornment: (
-//         <InputAdornment position="end">
-//           <CustomButton onClick={handleSendMessage}>
-//             <SendIcon style={{ color: "purple" }} />
-//           </CustomButton>
-//         </InputAdornment>
-//       ),
-//       style: {
-//         color: "white",
-//         borderRadius: "30px",
-//         padding: "0 20px",
-//       },
-//     }}
-//     sx={{
-//       "& .MuiOutlinedInput-root": {
-//         "& fieldset": {
-//           borderColor: "indigo",
-//         },
-//         "&:hover fieldset": {
-//           borderColor: "indigo",
-//         },
-//         "&.Mui-focused fieldset": {
-//           borderColor: "indigo",
-//         },
-//         color: "white",
-//       },
-//       "& .MuiInputLabel-root": {
-//         color: "white",
-//       },
-//       "& .MuiInputLabel-root.Mui-focused": {
-//         color: "white",
-//       },
-//     }}
-//     InputLabelProps={{
-//       style: { color: "white" },
-//     }}
-//   />
-// </div>
-// </div>

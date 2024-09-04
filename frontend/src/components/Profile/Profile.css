@@ -132,6 +132,7 @@
   border-radius: 15px;
   color: #fff;
   font-size: 0.9rem;
+  position: relative;
 }
 
 .recent-activity {
@@ -210,4 +211,10 @@
   border-radius: 12px;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+@media (max-width: 786px) {
+  .profile-card {
+    width: 80%;
+  }
 }
