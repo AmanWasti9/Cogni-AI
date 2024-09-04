@@ -205,7 +205,7 @@ const PDFToImage = () => {
       // Fetch the existing chat history
       const docSnap = await getDoc(docRef);
       let historyArray = [];
-
+      
       if (docSnap.exists()) {
         historyArray = docSnap.data().history || [];
       }
@@ -269,7 +269,7 @@ const PDFToImage = () => {
     }
   };
 
-  useEffect(() => {
+  // useEffect(() => {
     const initChat = async () => {
       if (!user || !user.uid || chatInitialized) {
         return;
@@ -310,8 +310,7 @@ const PDFToImage = () => {
       }
     };
 
-    initChat();
-  }, [user, chatInitialized]); // Use chatInitialized as a dependency
+  // }, [user, chatInitialized]); // Use chatInitialized as a dependency
 
   // Pdf Convertion
   useEffect(() => {
@@ -421,6 +420,7 @@ const PDFToImage = () => {
       console.log(
         "Chat history successfully updated with extracted information!"
       );
+      initChat();
     } catch (e) {
       console.error(
         "Error updating chat history with extracted information: ",
@@ -694,7 +694,9 @@ const PDFToImage = () => {
                       className={`extracted-d-link text-font ${
                         selectedOption === "qna" ? "active" : ""
                       }`}
-                      onClick={() => handleOptionClick("qna")}
+                      onClick={() => {
+                        handleOptionClick("qna")
+                        handleOptionClick("qna")}}
                     >
                       QnA
                     </li>
