@@ -202,6 +202,7 @@ const PDFToImage = () => {
     return filteredData;
   };
 
+  // Function to update the chat history after summary extraction
   async function updateChatHistory(newMessages) {
     if (!user || !user.uid) {
       console.error("User is not authenticated or UID is missing");
@@ -219,19 +220,19 @@ const PDFToImage = () => {
         historyArray = docSnap.data().history || [];
       }
 
-      // Create a Map to filter out old messages
-      const existingMessagesMap = new Map(
-        historyArray.map((msg) => [
-          `${msg.timestamp.toDate().getTime()}-${msg.text}`,
-          msg,
-        ])
-      );
+      // Append the new messages (summary information)
+      const updatedHistory = [...historyArray, ...newMessages];
 
-      // Append only the latest new messages
-      const uniqueMessages = newMessages.filter((newMsg) => {
-        const key = `${newMsg.timestamp.getTime()}-${newMsg.text}`;
-        return !existingMessagesMap.has(key);
+      // Update Firestore with the new history
+      await updateDoc(docRef, {
+        history: updatedHistory,
       });
+
+      console.log("Chat history updated successfully");
+
+      // Update local state after updating Firestore
+      setMessages(updatedHistory);
+      console.log("MSG BY AHMED UPDATED HISTORY", updatedHistory);
     } catch (e) {
       console.error("Error updating chat history: ", e);
     }
@@ -245,7 +246,8 @@ const PDFToImage = () => {
         timestamp: new Date(),
       };
       const newMessages = [...messages, userMessage];
-      setMessages(newMessages);
+      setMessages(newMessages); // Update state immediately
+      console.log("MSG BY AHMED", newMessages);
       setUserInput("");
 
       const retrievedData = retrieveInformation(userInput);
@@ -267,7 +269,8 @@ const PDFToImage = () => {
         };
 
         const updatedMessages = [...newMessages, botMessage];
-        setMessages(updatedMessages);
+        setMessages(updatedMessages); // Update messages locally with bot response
+        console.log("MSG BY AHMED UPDATED SOFTWARE", updatedMessages);
 
         // Update Firebase with both user and bot messages
         await updateChatHistory([userMessage, botMessage]);
@@ -288,9 +291,11 @@ const PDFToImage = () => {
       const docRef = doc(collection(firestore, "UsersHistory"), user.uid);
       const docSnap = await getDoc(docRef);
 
-      let historyarray = docSnap.exists() ? docSnap.data().history || [] : [];
+      let historyArray = docSnap.exists() ? docSnap.data().history || [] : [];
 
-      const chatHistory = historyarray.map((msg) => ({
+      console.log("History By AHMED", historyArray);
+
+      const chatHistory = historyArray.map((msg) => ({
         role: msg.role === "bot" ? "model" : msg.role,
         parts: [{ text: msg.text || "" }],
       }));
@@ -305,12 +310,13 @@ const PDFToImage = () => {
 
       setChat(newChat);
       setChatInitialized(true); // Set chat as initialized
-      setHistoryMessages(
+
+      // Update the state with the retrieved chat history
+      setMessages(
         chatHistory.map((msg) => ({
-          // Set chat history state
           text: msg.parts[0].text,
           role: msg.role,
-          timestamp: new Date(), // Placeholder, you might need to adjust based on your data
+          timestamp: new Date(), // Adjust this based on the actual timestamp from your data
         }))
       );
     } catch (error) {
@@ -483,12 +489,30 @@ const PDFToImage = () => {
     setOpen(false);
   };
 
-  const handleFileChange = (event) => {
+  // Function to handle file upload and summary extraction
+  const handleFileChange = async (event) => {
+    reset();
     const uploadedFile = event.target.files[0];
+
     if (uploadedFile) {
       setFile(uploadedFile);
-      setFileUploaded(true); // Set fileUploaded to true when a file is uploaded
+      setFileUploaded(true);
       setPageNumber(1);
+
+      // Step 1: Delete the old history before proceeding
+      await deleteUserHistory();
+
+      // // Step 2: Extract summary information (you need to implement the logic for this)
+      const summaryInformation = await updateExtractedInformation(uploadedFile); // Placeholder function
+
+      // // Step 3: Update the chat history with the extracted summary
+      const summaryMessage = {
+        text: summaryInformation, // The extracted summary
+        role: "summary", // You can assign a custom role like 'summary'
+        timestamp: new Date(),
+      };
+
+      await updateChatHistory([summaryMessage]); // Update Firestore with the new summary
     }
   };
 
@@ -663,6 +687,29 @@ const PDFToImage = () => {
     }
   };
 
+  const reset = () => {
+    setFileUploaded(false);
+  };
+
+  async function deleteUserHistory() {
+    if (!user || !user.uid) {
+      console.error("User is not authenticated or UID is missing");
+      return;
+    }
+
+    try {
+      const docRef = doc(collection(firestore, "UsersHistory"), user.uid);
+
+      // Update the history field to an empty array to remove previous uploads
+      await updateDoc(docRef, {
+        history: [], // Set the history to an empty array to remove old uploads
+      });
+      console.log("User history deleted successfully");
+    } catch (e) {
+      console.error("Error deleting user history: ", e);
+    }
+  }
+
   return (
     <div style={{ marginTop: "150px" }}>
       <Container>
@@ -822,11 +869,11 @@ const PDFToImage = () => {
                           >
                             <ReactMarkdown>
                               {extractedInformation[pageNumber - 1]?.summary ||
-                                "No summary available"}
+                                "Loading ..."}
                             </ReactMarkdown>
                             <br />
                             {extractedInformation[pageNumber - 1]?.formula ||
-                              "No formula available"}
+                              ""}
                           </p>
                         </div>
                       </div>

@@ -66,11 +66,11 @@
 /* Extracted Data display */
 /* Main Container */
 .extracted-data-disp-main {
-  width: 90%;
+  width: 95%;
   height: 60vh;
   background-color: rgba(255, 255, 255, 0.05);
   margin: 20px 0;
-  padding: 20px;
+  padding: 10px;
   border-radius: 25px;
   position: relative;
 }
@@ -106,8 +106,7 @@
 .extracted-d-link {
   color: #ffffff;
   text-decoration: none;
-  font-size: 1.1rem;
-  padding: 8px 12px;
+  font-size: 1.1em;
   border-radius: 12px;
   transition: background-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
   cursor: pointer;
@@ -123,7 +122,9 @@
 
 .sc-nav {
   background-color: #000000;
-  border-radius: 25px;
+  border-radius: 30px;
+  padding: 0 30px;
+  margin-bottom: 10px;
 }
 .sc-nav ul {
   list-style: none;
@@ -160,7 +161,7 @@
   background-color: rgba(60, 59, 59, 0.05);
   position: absolute;
   bottom: 0;
-  width: 92%;
+  width: 90%;
   margin: 20px 0;
   padding: 10px;
   display: flex;
