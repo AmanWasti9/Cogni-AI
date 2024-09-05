@@ -81,11 +81,11 @@ def chaining(pages):
     os.environ['GOOGLE_API_KEY'] = "AIzaSyBKydN1c17UL0PShV8c3jGEC0h5CRmE-KU"
 
     class Paper(BaseModel):
-        page: Optional[str] = Field(description="page heading")
-        summary: Optional[str] = Field(description="summary of page")
-        formula: Optional[str] = Field(description="formulas in  LaTeX-style mathematics ONLY")
-        diagrams: Optional[str] = Field(description="charts and diagram data as json clearly described")
-    
+        page: Optional[str] = Field(description="simple page heading")
+        summary: Optional[str] = Field(description="make sure you provide a summary that doesn't take away the context or meaning of the page yet is concise and to the point")
+        formula: Optional[str] = Field(description="If you encounter any mathematical formulas or statements, display them in LaTeX-style ONLY. Use the following format:\n\n$$<LaTeX-expressions from the page>$$")
+        diagrams: Optional[str] = Field(description="If you come across any charts or diagrams, clearly describe them as JSON data. Use the following format:\n\n{\n  \"type\": \"<chart/diagram-type>\",\n  \"data\": <data-details>,\n \"\n}")
+
     model = ChatGoogleGenerativeAI(model="gemini-1.5-flash")
 
     parser = PydanticOutputParser(pydantic_object=Paper)

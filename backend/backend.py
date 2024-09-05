@@ -57,6 +57,8 @@ def url_loader(user_input):
     return docs
 
 def extractor(docs):
+    os.environ['GOOGLE_API_KEY'] = "AIzaSyBKydN1c17UL0PShV8c3jGEC0h5CRmE-KU"
+
     llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0.7, top_p=0.85)
     
     llm_prompt_template = """Summarize the following article into its key components:
@@ -132,16 +134,8 @@ def extract_pdf(input: PDFInput):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# @app.post("/ask-question/")
-# def ask_question(input: QuestionInput):
-#     try:
-        # gemini_embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
-        # retriever = pine_index(input.docs, gemini_embeddings)
-        # answer = gemini(retriever, input.question)
-        # return {"answer": answer}
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=str(e))
-
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
+
+
