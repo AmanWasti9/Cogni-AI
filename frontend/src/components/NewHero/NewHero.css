@@ -99,9 +99,9 @@
 }
 @media (max-width: 768px) {
   .res-cog {
-    font-size: 6rem;
+    font-size: 4rem;
   }
   .hero-button {
-    width: 250px;
+    width: 200px;
   }
 }
