@@ -46,6 +46,10 @@ const Profile = () => {
 
   const [selectedPost, setSelectedPost] = useState(null);
 
+  useEffect(() => {
+    window.scrollTo(0, 0); // Scrolls to the top of the page
+  }, []);
+
   const handleEditToggle = (section) => {
     switch (section) {
       case "username":
@@ -282,7 +286,7 @@ const Profile = () => {
     <div className="profile-card">
       <div className="profile-header">
         <div className="profile-pic-container">
-          <div className="avatar">
+          <div className="avatar text-font">
             {!userData.imageUrl && <span>{firstLetter}</span>}
             {userData.imageUrl && (
               <img
@@ -307,7 +311,7 @@ const Profile = () => {
             type="text"
             value={newUsername}
             onChange={handleUsernameChange}
-            className="edit-username-input"
+            className="edit-username-input text-font"
             style={{
               border: "1px solid #5218fa",
               borderRadius: "10px",
@@ -319,30 +323,30 @@ const Profile = () => {
             }}
           />
         ) : (
-          <h1 className="profile-name">{userData.username}</h1>
+          <h1 className="profile-name text-font">{userData.username}</h1>
         )}
-        <p className="profile-username">{userData.email}</p>
+        <p className="profile-username text-font">{userData.email}</p>
         <div className="profile-actions">
           {isEditingUsername ? (
             <button
-              className="edit-profile-btn"
+              className="edit-profile-btn text-font"
               onClick={() => handleSave("username")}
             >
               Save
             </button>
           ) : (
             <button
-              className="edit-profile-btn"
+              className="edit-profile-btn text-font"
               onClick={() => handleEditToggle("username")}
             >
               Edit Profile
             </button>
           )}
-          <button className="view-activity-btn">View Activity</button>
+          <button className="view-activity-btn text-font">View Activity</button>
         </div>
       </div>
-      <div className="profile-details">
-        <h2 className="profile-section-title">About</h2>
+      <div className="profile-details text-font">
+        <h2 className="profile-section-title text-font">About</h2>
         <div
           style={{
             display: "flex",
@@ -354,7 +358,7 @@ const Profile = () => {
             <textarea
               value={newAbout}
               onChange={handleAboutChange}
-              className="edit-about-input"
+              className="edit-about-input text-font"
               style={{
                 width: "100%",
                 height: "100px",
@@ -368,11 +372,11 @@ const Profile = () => {
               }}
             />
           ) : (
-            <p className="profile-description">{userData.about}</p>
+            <p className="profile-description text-font">{userData.about}</p>
           )}
           {isEditingAbout ? (
             <button
-              className="edit-profile-btn"
+              className="edit-profile-btn text-font"
               onClick={() => handleSave("about")}
             >
               Save
@@ -390,7 +394,7 @@ const Profile = () => {
             </span>
           )}
         </div>
-        <h2 className="profile-section-title">Skills</h2>
+        <h2 className="profile-section-title text-font">Skills</h2>
         <div
           style={{
             display: "flex",
@@ -403,7 +407,7 @@ const Profile = () => {
               type="text"
               onChange={handleSkillsChange}
               onKeyDown={handleKeyDown}
-              className="edit-skills-input"
+              className="edit-skills-input text-font"
               style={{
                 width: "100%",
                 border: "1px solid #5218fa",
@@ -423,7 +427,7 @@ const Profile = () => {
               }}
             >
               {userData.skills.map((skill, index) => (
-                <li key={index} className="skill">
+                <li key={index} className="skill text-font">
                   {skill}
                   <span
                     onClick={() => handleDeleteSkill(index)}
@@ -444,7 +448,7 @@ const Profile = () => {
           )}
           {isEditingSkills ? (
             <button
-              className="edit-profile-btn"
+              className="edit-profile-btn text-font"
               onClick={() => handleSave("skills")}
             >
               Add
@@ -463,7 +467,7 @@ const Profile = () => {
           )}
         </div>
 
-        <h2 className="profile-section-title">My Posts</h2>
+        <h2 className="profile-section-title text-font">My Posts</h2>
         <div>
           {summaries.length > 0 ? (
             summaries.map((summary, index) => (
@@ -485,6 +489,7 @@ const Profile = () => {
                   aria-controls="panel1-content"
                   id="panel1-header"
                   onClick={() => handleOpen(summary)}
+                  className="text-font"
                 >
                   {summary.name}
                   {summary.likes ? summary.likes.length : 0}{" "}
@@ -502,12 +507,13 @@ const Profile = () => {
                           style={{
                             paddingLeft: "10px",
                           }}
+                          className="text-font"
                         >
                           <ReactMarkdown>{item.summary}</ReactMarkdown>
                         </div>
                       ))
                     ) : (
-                      <p>No summaries available</p>
+                      <p className="text-font">No summaries available</p>
                     )
                   ) : (
                     <p>Loading...</p>

@@ -120,6 +120,10 @@ const PDFToImage = () => {
   const API_KEY = "AIzaSyDYmligr0eUjKVNQqXJRKfFacWbWSiaPN0";
   const genAI = new GoogleGenerativeAI(API_KEY);
 
+  useEffect(() => {
+    window.scrollTo(0, 0); // Scrolls to the top of the page
+  }, []);
+
   const summaries = extractedInformation.map((info) => info.summary).join("\n");
   console.log(summaries);
   const model = genAI.getGenerativeModel({

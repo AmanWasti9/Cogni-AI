@@ -28,6 +28,10 @@ export default function DashboardPage() {
   const user = auth.currentUser;
 
   useEffect(() => {
+    window.scrollTo(0, 0); // Scrolls to the top of the page
+  }, []);
+
+  useEffect(() => {
     // Fetch the username from Firestore
     const fetchUsername = async () => {
       if (user) {

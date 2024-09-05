@@ -17,6 +17,9 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
+  TextField,
+  Switch,
+  FormControlLabel,
 } from "@mui/material";
 import { getAuth } from "firebase/auth";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
@@ -35,11 +38,49 @@ const Forum = () => {
   const [shareLinkOpen, setShareLinkOpen] = useState(false); // New state for share link dialog
   const [shareLink, setShareLink] = useState(""); // State to store the share link
 
+  const [openCollectionDialog, setOpenCollectionDialog] = useState(false);
+  const [collectionName, setCollectionName] = useState("");
+  const [isPublic, setIsPublic] = useState(true);
+  const [selectedPostId, setSelectedPostId] = useState(null);
+
   const auth = getAuth();
   const user = auth.currentUser;
 
   const navigate = useNavigate();
   const location = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0); // Scrolls to the top of the page
+  }, []);
+
+  // useEffect(() => {
+  //   const fetchLikedPosts = async () => {
+  //     if (!user) return;
+
+  //     try {
+  //       const userSummariesDocRef = doc(firestore, "Summaries", user.uid);
+  //       const userSummariesDoc = await getDoc(userSummariesDocRef);
+
+  //       if (userSummariesDoc.exists()) {
+  //         const userSummariesData = userSummariesDoc.data();
+  //         const summaries = userSummariesData.Summaries || [];
+
+  //         // Extract the names of summaries that the user has liked
+  //         const likedSummaryNames = summaries
+  //           .filter(
+  //             (summary) => summary.likes && summary.likes.includes(user.uid)
+  //           )
+  //           .map((summary) => summary.name);
+
+  //         setLikedPosts(likedSummaryNames);
+  //       }
+  //     } catch (error) {
+  //       console.error("Error fetching liked summaries:", error);
+  //     }
+  //   };
+
+  //   fetchLikedPosts();
+  // }, [user]);
 
   useEffect(() => {
     const fetchLikedPosts = async () => {
@@ -69,28 +110,6 @@ const Forum = () => {
 
     fetchLikedPosts();
   }, [user]);
-
-  // const handleOpen = async (post) => {
-  //   try {
-  //     const summariesCollectionRef = collection(
-  //       firestore,
-  //       `Summaries/${post.userId}/${post.name}`
-  //     );
-
-  //     const summariesSnapshot = await getDocs(summariesCollectionRef);
-  //     if (!summariesSnapshot.empty) {
-  //       const summaryData = summariesSnapshot.docs.map((doc) => doc.data());
-  //       setSelectedPost({ ...post, summaries: summaryData });
-  //       console.log(summaryData);
-  //       setOpen(true);
-  //       navigate(`/forum/post/${post.name}`, { replace: true });
-  //     } else {
-  //       console.error("No documents found in the sub-collection!");
-  //     }
-  //   } catch (error) {
-  //     console.error("Error fetching summary documents:", error);
-  //   }
-  // };
 
   const handleOpen = async (post) => {
     try {
@@ -128,26 +147,63 @@ const Forum = () => {
     navigate("/forum", { replace: true });
   };
 
-  const name = [
-    "All",
-    "General",
-    "Announcements",
-    "React",
-    "First Sum",
-    "Aman Card",
-  ];
+  // const name = [
+  //   "All",
+  //   "General",
+  //   "Announcements",
+  //   "React",
+  //   "First Sum",
+  //   "Aman Card",
+  // ];
+
+  // useEffect(() => {
+  //   const fetchPublicSummaries = async () => {
+  //     try {
+  //       const summariesCollection = collection(firestore, "Summaries");
+  //       const summariesSnapshot = await getDocs(summariesCollection);
+
+  //       const allSummaries = [];
+
+  //       for (const docSnapshot of summariesSnapshot.docs) {
+  //         const summaries = docSnapshot.data().Summaries || [];
+
+  //         const userDocRef = doc(firestore, "Users", docSnapshot.id);
+  //         const userDocSnapshot = await getDoc(userDocRef);
+  //         const username = userDocSnapshot.exists()
+  //           ? userDocSnapshot.data().username
+  //           : "Unknown User";
+
+  //         summaries.forEach((summary) => {
+  //           if (summary.public) {
+  //             allSummaries.push({
+  //               userId: docSnapshot.id,
+  //               name: summary.name,
+  //               username,
+  //               ...summary,
+  //             });
+  //           }
+  //         });
+  //       }
+
+  //       console.log("Fetched public summaries with usernames:", allSummaries);
+  //       setPosts(allSummaries);
+  //     } catch (error) {
+  //       console.error("Error fetching public summaries:", error);
+  //     }
+  //   };
+
+  //   fetchPublicSummaries();
+  // }, []);
 
   useEffect(() => {
     const fetchPublicSummaries = async () => {
       try {
         const summariesCollection = collection(firestore, "Summaries");
         const summariesSnapshot = await getDocs(summariesCollection);
-
         const allSummaries = [];
 
         for (const docSnapshot of summariesSnapshot.docs) {
           const summaries = docSnapshot.data().Summaries || [];
-
           const userDocRef = doc(firestore, "Users", docSnapshot.id);
           const userDocSnapshot = await getDoc(userDocRef);
           const username = userDocSnapshot.exists()
@@ -165,14 +221,11 @@ const Forum = () => {
             }
           });
         }
-
-        console.log("Fetched public summaries with usernames:", allSummaries);
         setPosts(allSummaries);
       } catch (error) {
         console.error("Error fetching public summaries:", error);
       }
     };
-
     fetchPublicSummaries();
   }, []);
 
@@ -194,24 +247,73 @@ const Forum = () => {
     setSortOrder(e.target.value);
   };
 
-  const handleAddToCollection = (postId) => {
-    const name = prompt("Enter the topic name for this post:");
-    if (name) {
-      const updatedPosts = posts.map((post) =>
-        post.id === postId ? { ...post, name } : post
-      );
-      setPosts(updatedPosts);
+  const handleAddToCollectionClick = (postId) => {
+    setSelectedPostId(postId); // Set selected post ID
+    setOpenCollectionDialog(true); // Open collection dialog
+  };
+
+  const handleCollectionSave = async () => {
+    if (!collectionName || !selectedPostId || !user) {
+      console.error("Collection name, post, or user is missing!");
+      return;
+    }
+
+    try {
+      const post = posts.find((post) => post.name === selectedPostId);
+      if (!post) {
+        console.error("Selected post not found!");
+        return;
+      }
+
+      // Create or update the logged user's Summaries collection in Firestore
+      const userSummariesDocRef = doc(firestore, "Summaries", user.uid);
+      const userSummariesDoc = await getDoc(userSummariesDocRef);
+
+      let summaries = [];
+      if (userSummariesDoc.exists()) {
+        summaries = userSummariesDoc.data().Summaries || [];
+      }
+
+      // Check for undefined values before adding to Firestore
+      const updatedSummary = {
+        collectionName: collectionName || "Default Collection", // Provide a fallback
+        name: selectedPostId,
+        summary: post.summary || "", // Ensure summary is not undefined
+        public: isPublic !== undefined ? isPublic : true, // Fallback to true if undefined
+      };
+
+      console.log("Updated summary:", updatedSummary);
+      const updatedSummaries = [...summaries, updatedSummary];
+
+      await updateDoc(userSummariesDocRef, {
+        Summaries: updatedSummaries,
+      });
+
+      setOpenCollectionDialog(false); // Close dialog
+      setCollectionName(""); // Reset input fields
+      setSelectedPostId(null); // Clear selected post
+    } catch (error) {
+      console.error("Error saving to collection:", error);
     }
   };
 
-  const handleTopicSelection = (name) => {
-    setSelectedTopic(name === "All" ? "" : name);
+  const handleDialogClose = () => {
+    setOpenCollectionDialog(false);
+    setCollectionName("");
+    setSelectedPostId(null);
   };
+
+  const handleTopicSelection = (name) => {
+    setSelectedTopic(name === "All" ? "" : name); // Select all if "All" is clicked, otherwise select the topic
+  };
+
+  // Get unique post names (remove duplicates)
+  const uniquePostNames = ["All", ...new Set(posts.map((post) => post.name))];
 
   const filteredPosts = posts.filter(
     (post) =>
-      post.name.toLowerCase().includes(filter.toLowerCase()) &&
-      (selectedTopic ? post.name === selectedTopic : true)
+      post.name.toLowerCase().includes(filter.toLowerCase()) && // Filtering by name
+      (selectedTopic ? post.name === selectedTopic : true) // Show all posts if no specific topic is selected
   );
 
   const sortedPosts = filteredPosts.sort((a, b) => {
@@ -222,15 +324,104 @@ const Forum = () => {
     }
   });
 
+  // const handleLikeToggle = async (postId) => {
+  //   // Find the post based on postId
+  //   const postIndex = posts.findIndex((post) => post.name === postId);
+  //   if (postIndex === -1) {
+  //     console.error("Post not found!");
+  //     return;
+  //   }
+
+  //   const post = posts[postIndex];
+  //   const { userId, name } = post;
+
+  //   // Create reference to the user's Summaries document
+  //   const userSummariesDocRef = doc(firestore, "Summaries", userId);
+
+  //   try {
+  //     // Fetch the user's Summaries document
+  //     const userSummariesDoc = await getDoc(userSummariesDocRef);
+
+  //     if (!userSummariesDoc.exists()) {
+  //       console.error("User Summaries document does not exist!");
+  //       return;
+  //     }
+
+  //     // Get the Summaries array from the user's document
+  //     const userSummariesData = userSummariesDoc.data();
+  //     const summaries = userSummariesData.Summaries || [];
+
+  //     // Find the specific summary within the array
+  //     const summaryIndex = summaries.findIndex(
+  //       (summary) => summary.name === name
+  //     );
+  //     if (summaryIndex === -1) {
+  //       console.error("Summary not found in the user's Summaries array!");
+  //       return;
+  //     }
+
+  //     const summary = summaries[summaryIndex];
+  //     const currentUserId = getAuth().currentUser.uid;
+
+  //     // Update the likes array for the specific summary manually
+  //     const updatedLikes = summary.likes || [];
+  //     const alreadyLiked = updatedLikes.includes(currentUserId);
+
+  //     if (alreadyLiked) {
+  //       console.log(`User is unliking post with ID: ${postId}`);
+  //       updatedLikes.splice(updatedLikes.indexOf(currentUserId), 1); // Remove user ID from likes
+  //     } else {
+  //       console.log(`User is liking post with ID: ${postId}`);
+  //       updatedLikes.push(currentUserId); // Add user ID to likes
+  //     }
+
+  //     // Update the specific summary in the summaries array
+  //     summaries[summaryIndex] = {
+  //       ...summary,
+  //       likes: updatedLikes,
+  //     };
+
+  //     // Update the user's Summaries document with the modified summaries array
+  //     await updateDoc(userSummariesDocRef, {
+  //       Summaries: summaries,
+  //     });
+
+  //     // Update local state for liked posts
+  //     setLikedPosts((prevLikedPosts) => {
+  //       if (alreadyLiked) {
+  //         return prevLikedPosts.filter((id) => id !== postId);
+  //       } else {
+  //         return [...prevLikedPosts, postId];
+  //       }
+  //     });
+
+  //     // Update the local posts array to reflect the new like count
+  //     setPosts((prevPosts) => {
+  //       const updatedPosts = [...prevPosts];
+  //       updatedPosts[postIndex] = {
+  //         ...updatedPosts[postIndex],
+  //         likes: alreadyLiked
+  //           ? updatedPosts[postIndex].likes.filter(
+  //               (like) => like !== currentUserId
+  //             )
+  //           : [...updatedPosts[postIndex].likes, currentUserId],
+  //       };
+  //       return updatedPosts;
+  //     });
+  //   } catch (error) {
+  //     console.error("Error updating like status:", error);
+  //   }
+  // };
   const handleLikeToggle = async (postId) => {
     // Find the post based on postId
-    const post = posts.find((post) => post.name === postId);
-    if (!post) {
+    const postIndex = posts.findIndex((post) => post.name === postId);
+    if (postIndex === -1) {
       console.error("Post not found!");
       return;
     }
 
-    const { userId, name } = post; // Destructure the necessary fields
+    const post = posts[postIndex];
+    const { userId, name } = post;
 
     // Create reference to the user's Summaries document
     const userSummariesDocRef = doc(firestore, "Summaries", userId);
@@ -260,16 +451,21 @@ const Forum = () => {
       const summary = summaries[summaryIndex];
       const currentUserId = getAuth().currentUser.uid;
 
-      // Update the likes array for the specific summary manually
-      const updatedLikes = summary.likes || [];
+      // Ensure the likes array exists and is an array
+      const updatedLikes = Array.isArray(summary.likes) ? summary.likes : [];
       const alreadyLiked = updatedLikes.includes(currentUserId);
 
       if (alreadyLiked) {
         console.log(`User is unliking post with ID: ${postId}`);
-        updatedLikes.splice(updatedLikes.indexOf(currentUserId), 1); // Remove user ID from likes
+        // Remove user ID from likes
+        const index = updatedLikes.indexOf(currentUserId);
+        if (index > -1) {
+          updatedLikes.splice(index, 1);
+        }
       } else {
         console.log(`User is liking post with ID: ${postId}`);
-        updatedLikes.push(currentUserId); // Add user ID to likes
+        // Add user ID to likes
+        updatedLikes.push(currentUserId);
       }
 
       // Update the specific summary in the summaries array
@@ -283,7 +479,7 @@ const Forum = () => {
         Summaries: summaries,
       });
 
-      // Update local state
+      // Update local state for liked posts
       setLikedPosts((prevLikedPosts) => {
         if (alreadyLiked) {
           return prevLikedPosts.filter((id) => id !== postId);
@@ -291,17 +487,26 @@ const Forum = () => {
           return [...prevLikedPosts, postId];
         }
       });
+
+      // Update the local posts array to reflect the new like count
+      setPosts((prevPosts) => {
+        const updatedPosts = [...prevPosts];
+        updatedPosts[postIndex] = {
+          ...updatedPosts[postIndex],
+          likes: Array.isArray(updatedPosts[postIndex].likes)
+            ? alreadyLiked
+              ? updatedPosts[postIndex].likes.filter(
+                  (like) => like !== currentUserId
+                )
+              : [...updatedPosts[postIndex].likes, currentUserId]
+            : [], // Ensure likes is always an array
+        };
+        return updatedPosts;
+      });
     } catch (error) {
       console.error("Error updating like status:", error);
     }
   };
-
-  // const handleShareLinkOpen = (post) => {
-  //   console.log("Opening share link dialog"); // Add this line for debugging
-  //   const link = `${window.location.origin}/forum/post/${post.name}`;
-  //   setShareLink(link);
-  //   setShareLinkOpen(true);
-  // };
 
   return (
     <div
@@ -311,11 +516,11 @@ const Forum = () => {
       }}
     >
       <div className="sidebar">
-        <h2>Collections</h2>
-        <ul>
-          {name.map((n) => (
-            <li key={n} onClick={() => handleTopicSelection(n)}>
-              {n}
+        <h2 className="header-font">Collections</h2>
+        <ul className="text-font">
+          {uniquePostNames.map((name) => (
+            <li key={name} onClick={() => handleTopicSelection(name)}>
+              {name}
             </li>
           ))}
         </ul>
@@ -338,10 +543,10 @@ const Forum = () => {
             <option value="oldest">Oldest First</option>
           </select>
         </div>
-        <h1 className="forum-title">Forum</h1>
-        <div className="posts-list">
+        <h1 className="forum-title header-font">Forum</h1>
+        <div className="posts-list text-font">
           {sortedPosts.map((post) => (
-            <div className="post" key={post.id}>
+            <div className="post" key={post.name}>
               <div className="post-header">
                 <div
                   style={{
@@ -350,8 +555,8 @@ const Forum = () => {
                     gap: "20px",
                   }}
                 >
-                  <span className="post-user">{post.username}</span>
-                  <p className="post-content">Topic: {post.name}</p>
+                  <span className="post-user text-font">{post.username}</span>
+                  <p className="post-content text-font">Topic: {post.name}</p>
                 </div>
                 <div
                   style={{
@@ -361,18 +566,14 @@ const Forum = () => {
                   }}
                 >
                   <button
-                    // onClick={(e) => {
-                    //   e.stopPropagation();
-                    //   handleAddToCollection(post.id);
-                    // }}
-                    onClick={() => handleAddToCollection(post.id)}
-                    className="add-to-collection-btn"
+                    onClick={() => handleAddToCollectionClick(post.name)}
+                    className="add-to-collection-btn  text-font"
                   >
                     Add to Collection
                   </button>
                   <button
                     onClick={() => handleOpen(post)}
-                    className="add-to-collection-btn"
+                    className="add-to-collection-btn  text-font"
                   >
                     View More
                   </button>
@@ -403,15 +604,9 @@ const Forum = () => {
                   ) : (
                     <AiOutlineLike />
                   )}
-                  {post.likes && post.likes.length > 0 ? (
-                    <span style={{ marginLeft: "8px", fontSize: "12px" }}>
-                      {post.likes.length}
-                    </span>
-                  ) : (
-                    <span style={{ marginLeft: "8px", fontSize: "12px" }}>
-                      0
-                    </span>
-                  )}
+                  <span style={{ marginLeft: "8px", fontSize: "12px" }}>
+                    {Array.isArray(post.likes) ? post.likes.length : 0}
+                  </span>
                 </span>
 
                 <span onClick={() => handleShareLinkOpen(post)}>
@@ -490,6 +685,35 @@ const Forum = () => {
         <DialogActions>
           <Button onClick={() => setShareLinkOpen(false)} color="primary">
             Close
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Dialog of Colectioon Add */}
+      {/* Dialog for adding to collection */}
+      <Dialog open={openCollectionDialog} onClose={handleDialogClose}>
+        <DialogTitle>Add to Collection</DialogTitle>
+        <DialogContent>
+          <TextField
+            label="Collection Name"
+            fullWidth
+            value={collectionName}
+            onChange={(e) => setCollectionName(e.target.value)}
+          />
+          <FormControlLabel
+            control={
+              <Switch
+                checked={isPublic}
+                onChange={(e) => setIsPublic(e.target.checked)}
+              />
+            }
+            label="Public"
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDialogClose}>Cancel</Button>
+          <Button onClick={handleCollectionSave} variant="contained">
+            Save
           </Button>
         </DialogActions>
       </Dialog>
