@@ -1,0 +1,195 @@
+.pdf-main-div {
+  display: flex;
+  flex-direction: row;
+  gap: 20px;
+  justify-content: center;
+  text-align: center;
+}
+.upload-btn {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  text-align: center;
+  margin-top: 250px;
+}
+.extracted-d-link.active {
+  background: linear-gradient(45deg, #e848e5, #5218fa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.pdf-page {
+  width: 70%;
+}
+
+/* Upoload File Button */
+.file-upload-form {
+  width: fit-content;
+  height: fit-content;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.file-upload-label input {
+  display: none;
+}
+.file-upload-label svg {
+  height: 50px;
+  fill: linear-gradient(45deg, #e848e5, #5218fa);
+  margin-bottom: 20px;
+}
+.file-upload-label {
+  cursor: pointer;
+  background-color: rgba(255, 255, 255, 0.05);
+  padding: 30px 70px;
+  border-radius: 40px;
+  border: 2px dashed #e848e5;
+}
+.file-upload-design {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+.browse-button {
+  background: linear-gradient(45deg, #e848e5, #5218fa);
+  padding: 5px 15px;
+  border-radius: 10px;
+  color: white;
+  transition: all 0.3s;
+}
+.browse-button:hover {
+  background-color: rgb(14, 14, 14);
+}
+
+/* Extracted Data display */
+/* Main Container */
+.extracted-data-disp-main {
+  width: 90%;
+  height: 60vh;
+  background-color: rgba(255, 255, 255, 0.05);
+  margin: 20px 0;
+  padding: 20px;
+  border-radius: 25px;
+  position: relative;
+}
+
+.extracted-d-container {
+  background-color: #000000;
+  border-radius: 25px;
+  padding: 10px 40px;
+  width: 85%;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease-in-out;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+}
+
+.extracted-d-container:hover {
+  box-shadow: 0 0 20px 10px rgba(82, 24, 250, 0.5);
+}
+
+.extracted-d-menu {
+  list-style: none;
+  display: flex;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+}
+
+.extracted-d-item {
+  margin-left: 20px;
+}
+
+.extracted-d-link {
+  color: #ffffff;
+  text-decoration: none;
+  font-size: 1.1rem;
+  padding: 8px 12px;
+  border-radius: 12px;
+  transition: background-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+  cursor: pointer;
+}
+
+.extracted-d-link:hover {
+  color: #ffffff;
+  box-shadow: 0 0 10px 5px rgba(82, 24, 250, 0.5);
+  cursor: pointer;
+}
+
+/* New */
+
+.sc-nav {
+  background-color: #000000;
+  border-radius: 25px;
+}
+.sc-nav ul {
+  list-style: none;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  gap: 20px;
+  padding: 10px;
+}
+
+/* new btns */
+
+.all-btns-wrapper {
+  position: absolute;
+  bottom: 0;
+  width: 90%;
+  margin: 20px 0;
+  display: flex;
+  justify-content: end;
+}
+
+.all-btns {
+  border-radius: 25px;
+  height: 20px;
+  width: 90%;
+  display: flex;
+  justify-content: end;
+  gap: 20px;
+  padding: 20px;
+}
+
+/* Chatbott css */
+.chatbot-wrapper {
+  background-color: rgba(60, 59, 59, 0.05);
+  position: absolute;
+  bottom: 0;
+  width: 92%;
+  margin: 20px 0;
+  padding: 10px;
+  display: flex;
+  justify-content: center;
+  border-radius: 30px;
+}
+
+.url-inp {
+  width: 40%;
+  padding: 20px;
+  border-radius: 15px;
+  background-color: transparent;
+  color: white;
+  border: 2px dashed #5218fa;
+  outline: none;
+}
+
+@media (max-width: 768px) {
+  .pdf-main-div {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+  }
+  .upload-btn,
+  .pdf-page {
+    width: 100%;
+  }
+  .url-inp {
+    width: 100%;
+  }
+}

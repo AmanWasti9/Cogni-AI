@@ -1,0 +1,135 @@
+/* Navbar Container */
+.navbar-container {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #000000; /* Slightly lighter than the background */
+  border-radius: 25px; /* Keeps the navbar rounded */
+  padding: 10px 40px;
+  max-width: 800px;
+  width: 80%; /* Adjust this as per your need */
+  z-index: 999;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease-in-out;
+}
+
+.navbar-container:hover {
+  box-shadow: 0 0 20px 10px rgba(82, 24, 250, 0.5); /* Rounded box shadow for the glow effect */
+}
+
+/* Navbar Wrapper */
+.navbar-wrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Logo */
+.navbar-logo {
+  color: #ffffff;
+  text-decoration: none;
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+/* Menu Icon */
+.menu-icon {
+  display: none;
+  cursor: pointer;
+}
+
+.menu-icon div {
+  width: 25px;
+  height: 3px;
+  background-color: #ffffff;
+  margin: 4px 0;
+  transition: all 0.4s ease;
+}
+
+.menu-icon.open .bar1 {
+  transform: rotate(-45deg) translate(-5px, 6px);
+}
+
+.menu-icon.open .bar2 {
+  opacity: 0;
+}
+
+.menu-icon.open .bar3 {
+  transform: rotate(45deg) translate(-5px, -6px);
+}
+
+@media screen and (max-width: 768px) {
+  .menu-icon {
+    display: block;
+  }
+}
+
+/* Nav Menu */
+.nav-menu {
+  list-style: none;
+  display: flex;
+  margin: 0;
+  padding: 0;
+}
+
+@media screen and (max-width: 768px) {
+  .nav-menu {
+    position: absolute;
+    top: 100px;
+    left: 0;
+    width: 100%;
+    height: calc(100vh - 60px);
+    background-color: rgba(0, 0, 0, 0.9); /* Dark gray for mobile background */
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transform: translateX(-150%);
+    transition: transform 0.4s ease-in-out;
+    border-radius: 30px;
+  }
+
+  .nav-menu.active {
+    transform: translateX(0);
+  }
+}
+
+/* Nav Item */
+.nav-item {
+  margin-left: 20px;
+}
+
+@media screen and (max-width: 768px) {
+  .nav-item {
+    margin: 20px 0;
+  }
+}
+
+/* Nav Link */
+.nav-link {
+  color: #ffffff;
+  text-decoration: none;
+  font-size: 1.1rem;
+  padding: 8px 12px;
+  border-radius: 12px;
+  transition: background-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+  -webkit-border-radius: 12px;
+  -moz-border-radius: 12px;
+  -ms-border-radius: 12px;
+  -o-border-radius: 12px;
+  cursor: pointer;
+}
+
+.nav-link:hover {
+  color: #ffffff;
+  box-shadow: 0 0 10px 5px rgba(82, 24, 250, 0.5); /* Rounded glow effect on text */
+  border-radius: 12px; /* Ensure the glow is rounded */
+  cursor: pointer;
+}
+
+@media screen and (max-width: 768px) {
+  .nav-link {
+    font-size: 1.5rem;
+    cursor: pointer;
+  }
+}

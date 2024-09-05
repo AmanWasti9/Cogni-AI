@@ -1,0 +1,122 @@
+.hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  min-height: 100vh;
+  background: transparent;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-content {
+  max-width: 500px;
+}
+
+.hero-title {
+  font-size: 3rem;
+  font-family: "Poppins", sans-serif;
+  font-weight: 600;
+  font-style: normal;
+  background: linear-gradient(to bottom, #e848e5, #5218fa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.hero-info {
+  font-size: 3rem;
+  font-family: "Poppins", sans-serif;
+  font-weight: 600;
+  font-style: normal;
+  color: white;
+}
+
+.hero-description {
+  font-size: 1.25rem;
+  margin-bottom: 30px;
+}
+
+.hero-image {
+  width: 50%;
+}
+
+.hero-image img {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+  border-radius: 10px;
+}
+.fluid-gradient {
+  display: flex;
+  flex-direction: column;
+  justify-content: start;
+  align-items: start;
+  gap: 10px;
+}
+
+.hero-button {
+  padding: 15px 40px;
+  font-size: 1rem;
+  font-weight: bold;
+  color: #fff;
+  background: linear-gradient(to bottom, #e848e5, #5218fa);
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.3s ease, color 0.3s ease;
+  width: 300px;
+}
+.hero-button:hover {
+  background: linear-gradient(to bottom, #5218fa, #e848e5);
+  color: #fff;
+}
+.loader-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  width: 100%;
+}
+
+/* Media Query for screens less than 768px */
+@media (max-width: 768px) {
+  .fluid-gradient {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    justify-content: center;
+    align-items: center;
+  }
+  .hero {
+    flex-direction: column;
+    padding: 30px 10px;
+    text-align: center;
+    min-height: auto;
+  }
+
+  .hero-content {
+    max-width: 100%;
+  }
+
+  .hero-title {
+    font-size: 2rem;
+    margin-bottom: 15px;
+  }
+
+  .hero-description {
+    font-size: 1rem;
+    margin-bottom: 20px;
+  }
+
+  .hero-button {
+    padding: 8px 15px;
+    font-size: 0.875rem;
+  }
+
+  .hero-image {
+    position: static;
+    width: 80%;
+    margin-top: 20px;
+  }
+}
