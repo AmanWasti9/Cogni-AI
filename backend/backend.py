@@ -57,7 +57,7 @@ def url_loader(user_input):
     return docs
 
 def extractor(docs):
-    os.environ['GOOGLE_API_KEY'] = "AIzaSyBKydN1c17UL0PShV8c3jGEC0h5CRmE-KU"
+    os.environ['GOOGLE_API_KEY'] = os.getenv('GOOGLE_API_KEY')
 
     llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0.7, top_p=0.85)
     
