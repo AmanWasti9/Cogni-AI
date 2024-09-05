@@ -78,7 +78,7 @@ def chaining(pages):
     cleaned = [item['cleanImage'] for item in pages['pages_api']]
 
     # Manually set the Google API key here
-    os.environ['GOOGLE_API_KEY'] = "AIzaSyBKydN1c17UL0PShV8c3jGEC0h5CRmE-KU"
+    os.environ['GOOGLE_API_KEY'] = os.getenv('GOOGLE_API_KEY')
 
     class Paper(BaseModel):
         page: Optional[str] = Field(description="simple page heading")
