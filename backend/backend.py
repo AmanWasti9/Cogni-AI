@@ -14,8 +14,6 @@ import os
 from pinecone import Pinecone as pc
 from pinecone import PodSpec
 
-import pandas as pd
-
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
