@@ -221,6 +221,8 @@ const PDFToImage = () => {
       }
 
       // Append the new messages (summary information)
+      console.log("This is history array", historyArray);
+      console.log("This is newmessages", newMessages);
       const updatedHistory = [...historyArray, ...newMessages];
 
       // Update Firestore with the new history
@@ -245,6 +247,7 @@ const PDFToImage = () => {
         role: "user",
         timestamp: new Date(),
       };
+
       const newMessages = [...messages, userMessage];
       setMessages(newMessages); // Update state immediately
       console.log("MSG BY AHMED", newMessages);
@@ -258,6 +261,7 @@ const PDFToImage = () => {
           role: msg.role === "user" ? "user" : "model",
           parts: [{ text: msg.text || "" }],
         }));
+        console.log("NEW MESSAGE TEST AHMED", newMessages);
         const result = await chat.sendMessage(userInput, {
           // context,
           history: contextMessages,
@@ -282,16 +286,12 @@ const PDFToImage = () => {
   };
 
   // useEffect(() => {
-  const initChat = async () => {
-    if (!user || !user.uid || chatInitialized) {
-      return;
-    }
-
+  const initChat = async (historyArray) => {
     try {
-      const docRef = doc(collection(firestore, "UsersHistory"), user.uid);
-      const docSnap = await getDoc(docRef);
+      // const docRef = doc(collection(firestore, "UsersHistory"), user.uid);
+      // const docSnap = await getDoc(docRef);
 
-      let historyArray = docSnap.exists() ? docSnap.data().history || [] : [];
+      // let historyArray = docSnap.exists() ? docSnap.data().history || [] : [];
 
       console.log("History By AHMED", historyArray);
 
@@ -326,7 +326,54 @@ const PDFToImage = () => {
   };
 
   // }, [user, chatInitialized]); // Use chatInitialized as a dependency
+  // New function to update chat history with extracted information
+  const updateExtractedInformation = async (extractedInformation) => {
+    if (!user || !user.uid) {
+      console.error("User is not authenticated or UID is missing");
+      return;
+    }
 
+    try {
+      const docRef = doc(collection(firestore, "UsersHistory"), user.uid);
+
+      // Fetch the existing chat history
+      const docSnap = await getDoc(docRef);
+      let historyArray = [];
+
+      if (docSnap.exists()) {
+        historyArray = docSnap.data().history || [];
+      }
+
+      // Prepare the extracted information as a single message
+      const summaries = Array.isArray(extractedInformation)
+        ? extractedInformation.map((info) => info.summary).join("\n")
+        : extractedInformation || "";
+
+      console.log("Summaries Aman ", summaries);
+
+      const extract = {
+        text: `This is the document:\n\n${summaries}`,
+        role: "user", // You can change this if needed
+        timestamp: new Date(), // Current timestamp
+      };
+
+      // Add the extract object to the historyArray
+      historyArray.push(extract); // Add the extract object directly
+
+      console.log("HISTORY ARRAY IN UPDATED EXTRACTED ", historyArray);
+
+      await setDoc(docRef, { history: historyArray });
+      console.log(
+        "Chat history successfully updated with extracted information!"
+      );
+      await initChat(historyArray);
+    } catch (e) {
+      console.error(
+        "Error updating chat history with extracted information: ",
+        e
+      );
+    }
+  };
   // Pdf Convertion
   useEffect(() => {
     const convertPdfToImages = async () => {
@@ -395,55 +442,6 @@ const PDFToImage = () => {
     convertPdfToImages();
   }, [file]);
 
-  // New function to update chat history with extracted information
-  const updateExtractedInformation = async (extractedInformation) => {
-    if (!user || !user.uid) {
-      console.error("User is not authenticated or UID is missing");
-      return;
-    }
-
-    try {
-      const docRef = doc(collection(firestore, "UsersHistory"), user.uid);
-
-      // Fetch the existing chat history
-      const docSnap = await getDoc(docRef);
-      let historyArray = [];
-
-      if (docSnap.exists()) {
-        historyArray = docSnap.data().history || [];
-      }
-
-      // Prepare the extracted information as a single message
-      const summaries = Array.isArray(extractedInformation)
-        ? extractedInformation.map((info) => info.summary).join("\n")
-        : extractedInformation || "";
-
-      console.log("Summaries Aman ", summaries);
-
-      const extract = {
-        text: `This is the document:\n\n${summaries}`,
-        role: "user", // You can change this if needed
-        timestamp: new Date(), // Current timestamp
-      };
-
-      // Add the extract object to the historyArray
-      historyArray.push(extract); // Add the extract object directly
-
-      console.log(historyArray);
-
-      await setDoc(docRef, { history: historyArray });
-      console.log(
-        "Chat history successfully updated with extracted information!"
-      );
-      initChat();
-    } catch (e) {
-      console.error(
-        "Error updating chat history with extracted information: ",
-        e
-      );
-    }
-  };
-
   const handleDownloadPDF = () => {
     const doc = new jsPDF();
     let yPosition = 20;
@@ -504,7 +502,6 @@ const PDFToImage = () => {
 
       // // Step 2: Extract summary information (you need to implement the logic for this)
       const summaryInformation = await updateExtractedInformation(uploadedFile); // Placeholder function
-
       // // Step 3: Update the chat history with the extracted summary
       const summaryMessage = {
         text: summaryInformation, // The extracted summary
@@ -935,37 +932,54 @@ const PDFToImage = () => {
                           overflowX: "hidden",
                         }}
                       >
-                        {messages.map((msg, index) => (
-                          <div
-                            key={index}
-                            style={{
-                              display: "flex",
-                              justifyContent:
-                                msg.role === "user" ? "flex-end" : "flex-start",
-                              flexDirection: "column",
-                              alignItems:
-                                msg.role === "user" ? "flex-end" : "flex-start",
-                              marginBottom: 8, // Updated margin for better spacing
-                              padding: "0 8px",
-                            }}
-                          >
-                            <p
-                              className="text-font"
+                        {messages
+                          .filter((msg, index) => {
+                            // Skip the first two messages if they are from the user
+                            const userMessages = messages.filter(
+                              (m) => m.role === "user"
+                            );
+                            const firstTwoUserMessages = userMessages.slice(
+                              0,
+                              2
+                            );
+                            return !firstTwoUserMessages.includes(msg);
+                          })
+                          .map((msg, index) => (
+                            <div
+                              key={index}
                               style={{
-                                backgroundColor:
-                                  msg.role === "user" ? "#5218fa" : "#e848e5",
-                                wordWrap: "break-word",
-                                padding: "8px 20px",
-                                borderRadius: 8,
-                                maxWidth: "75%",
-                                textAlign:
-                                  msg.role === "user" ? "right" : "left",
+                                display: "flex",
+                                justifyContent:
+                                  msg.role === "user"
+                                    ? "flex-end"
+                                    : "flex-start",
+                                flexDirection: "column",
+                                alignItems:
+                                  msg.role === "user"
+                                    ? "flex-end"
+                                    : "flex-start",
+                                marginBottom: 8, // Updated margin for better spacing
+                                padding: "0 8px",
                               }}
                             >
-                              {msg.text}
-                            </p>
-                          </div>
-                        ))}
+                              <p
+                                className="text-font"
+                                style={{
+                                  backgroundColor:
+                                    msg.role === "user" ? "#5218fa" : "#e848e5",
+                                  wordWrap: "break-word",
+                                  padding: "8px 20px",
+                                  borderRadius: 8,
+                                  maxWidth: "75%",
+                                  textAlign:
+                                    msg.role === "user" ? "right" : "left",
+                                }}
+                              >
+                                {msg.text}
+                              </p>
+                            </div>
+                          ))}
+
                         {/* <div ref={messageEndRef} /> Scroll target */}
                       </div>
                       <div className="chatbot-wrapper">
