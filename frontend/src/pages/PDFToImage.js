@@ -660,7 +660,7 @@ const PDFToImage = () => {
 
   const handleUrlChange = async (e) => {
     reset();
-
+    await deleteUserHistory();
     const url = e.target.value;
     console.log(url);
     setLinkUploaded(true);
@@ -672,15 +672,21 @@ const PDFToImage = () => {
           url: url,
         }
       );
-      console.log("Res Aman", response);
       if (response.data.extracted_information) {
         const extractedInfo = response.data.extracted_information;
         console.log("Resppp Aman", extractedInfo);
         setExtractedInformation(extractedInfo);
 
-        // Update chat history with the extracted information
-        await updateExtractedInformation(extractedInfo);
-      }
+      // // Step 2: Extract summary information (you need to implement the logic for this)
+      const summaryInformation = await updateExtractedInformation(extractedInfo); // Placeholder function
+      // // Step 3: Update the chat history with the extracted summary
+      const summaryMessage = {
+        text: summaryInformation, // The extracted summary
+        role: "summary", // You can assign a custom role like 'summary'
+        timestamp: new Date(),}
+        await updateChatHistory([summaryMessage]); // Update Firestore with the new summary
+      };
+      
     } catch (error) {
       console.error("Error extracting URL information:", error);
     }
@@ -1306,7 +1312,7 @@ const PDFToImage = () => {
                               );
                               const firstTwoUserMessages = userMessages.slice(
                                 0,
-                                2
+                                1
                               );
                               return !firstTwoUserMessages.includes(msg);
                             })
