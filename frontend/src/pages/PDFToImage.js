@@ -659,6 +659,8 @@ const PDFToImage = () => {
   }, [user]);
 
   const handleUrlChange = async (e) => {
+    reset();
+
     const url = e.target.value;
     console.log(url);
     setLinkUploaded(true);
@@ -975,7 +977,7 @@ const PDFToImage = () => {
                                     msg.role === "user" ? "right" : "left",
                                 }}
                               >
-                                {msg.text}
+                                <ReactMarkdown>{msg.text}</ReactMarkdown>
                               </p>
                             </div>
                           ))}
@@ -1296,41 +1298,55 @@ const PDFToImage = () => {
                             overflowX: "hidden",
                           }}
                         >
-                          {messages.map((msg, index) => (
-                            <div
-                              key={index}
-                              style={{
-                                display: "flex",
-                                justifyContent:
-                                  msg.role === "user"
-                                    ? "flex-end"
-                                    : "flex-start",
-                                flexDirection: "column",
-                                alignItems:
-                                  msg.role === "user"
-                                    ? "flex-end"
-                                    : "flex-start",
-                                marginBottom: 8,
-                                padding: "0 8px",
-                              }}
-                            >
-                              <p
-                                className="text-font"
+                          {messages
+                            .filter((msg, index) => {
+                              // Skip the first two messages if they are from the user
+                              const userMessages = messages.filter(
+                                (m) => m.role === "user"
+                              );
+                              const firstTwoUserMessages = userMessages.slice(
+                                0,
+                                2
+                              );
+                              return !firstTwoUserMessages.includes(msg);
+                            })
+                            .map((msg, index) => (
+                              <div
+                                key={index}
                                 style={{
-                                  backgroundColor:
-                                    msg.role === "user" ? "#5218fa" : "#e848e5",
-                                  wordWrap: "break-word",
-                                  padding: "8px 20px",
-                                  borderRadius: 8,
-                                  maxWidth: "75%",
-                                  textAlign:
-                                    msg.role === "user" ? "right" : "left",
+                                  display: "flex",
+                                  justifyContent:
+                                    msg.role === "user"
+                                      ? "flex-end"
+                                      : "flex-start",
+                                  flexDirection: "column",
+                                  alignItems:
+                                    msg.role === "user"
+                                      ? "flex-end"
+                                      : "flex-start",
+                                  marginBottom: 8, // Updated margin for better spacing
+                                  padding: "0 8px",
                                 }}
                               >
-                                {msg.text}
-                              </p>
-                            </div>
-                          ))}
+                                <p
+                                  className="text-font"
+                                  style={{
+                                    backgroundColor:
+                                      msg.role === "user"
+                                        ? "#5218fa"
+                                        : "#e848e5",
+                                    wordWrap: "break-word",
+                                    padding: "8px 20px",
+                                    borderRadius: 8,
+                                    maxWidth: "75%",
+                                    textAlign:
+                                      msg.role === "user" ? "right" : "left",
+                                  }}
+                                >
+                                  <ReactMarkdown>{msg.text}</ReactMarkdown>
+                                </p>
+                              </div>
+                            ))}
                         </div>
                         <div className="chatbot-wrapper">
                           <TextField
