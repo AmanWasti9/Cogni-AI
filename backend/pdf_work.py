@@ -111,5 +111,5 @@ def chaining(pages):
     chain = prompt | model | parser
 
     # Process the images
-    results = chain.batch(all_images)
+    results = chain.batch(all_images,config={"max_concurrency": 10})
     return results
